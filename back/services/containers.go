@@ -12,6 +12,7 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/apis"
+	"github.com/pocketbase/pocketbase/forms"
 	"github.com/pocketbase/pocketbase/models"
 )
 
@@ -37,7 +38,7 @@ func (cn Container) List(c echo.Context) error {
 
 	cn.app.Dao().DB().
 		Select("*").
-		From("containers_registry").
+		From("containers").
 		Where(dbx.NewExp("owner = {:id}", dbx.Params{"id": user.Id})).
 		All(&containers)
 
@@ -71,22 +72,22 @@ func (cn Container) StopContainer(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, err)
 	}
 
-	container := types.Container{}
+	container := types.ContainerDTO{}
 
 	err := cn.app.Dao().DB().Select("*").
-		From("containers_registry").
-		Where(dbx.NewExp("container_id = {:id}", dbx.Params{"id": containerId})).
+		From("containers").
+		Where(dbx.NewExp("docker_id = {:id}", dbx.Params{"id": containerId})).
 		One(&container)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
 
-	record, err := cn.app.Dao().FindRecordById("containers_registry", container.Id)
+	record, err := cn.app.Dao().FindRecordById("containers", container.Id)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
 
-	record.Set("container_status", "Stopped")
+	record.Set("status", "Stopped")
 	record.Set("port", 0)
 
 	if err := cn.app.Dao().SaveRecord(record); err != nil {
@@ -103,17 +104,17 @@ func (cn Container) StartContainer(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, err)
 	}
 
-	container := types.Container{}
+	container := types.ContainerDTO{}
 
 	err := cn.app.Dao().DB().Select("*").
-		From("containers_registry").
-		Where(dbx.NewExp("container_id = {:id}", dbx.Params{"id": containerId})).
+		From("containers").
+		Where(dbx.NewExp("docker_id = {:id}", dbx.Params{"id": containerId})).
 		One(&container)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
 
-	record, err := cn.app.Dao().FindRecordById("containers_registry", container.Id)
+	record, err := cn.app.Dao().FindRecordById("containers", container.Id)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
@@ -133,4 +134,36 @@ func (cn Container) PostToContainer(c echo.Context) error {
 	data := apis.RequestInfo(c).Data
 	status, value := Proxy("http://localhost:5000", data)
 	return c.JSON(status, value)
+}
+
+func (cn Container) Create(c echo.Context) error {
+	user, _ := c.Get(apis.ContextAuthRecordKey).(*models.Record)
+
+	data := types.GeneratedScriptDTO{}
+	if err := c.Bind(&data); err != nil {
+		return c.JSON(http.StatusBadRequest, err)
+	}
+
+	//CREATE script
+	collection, err := cn.app.Dao().FindCollectionByNameOrId("scripts")
+	if err != nil {
+		cn.app.Logger().Error(err.Error())
+		return err
+	}
+
+	record := models.NewRecord(collection)
+	form := forms.NewRecordUpsert(cn.app, record)
+
+	form.LoadData(map[string]any{
+		"script":  data.Script,
+		"payload": data.Payload,
+		"owner":   user.Id,
+	})
+
+	if err := form.Submit(); err != nil {
+		cn.app.Logger().Error(err.Error())
+		return err
+	}
+
+	return nil
 }

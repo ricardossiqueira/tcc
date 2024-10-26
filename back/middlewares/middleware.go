@@ -19,11 +19,11 @@ func RequireContainerOwnership(app *pocketbase.PocketBase) echo.MiddlewareFunc {
 			}
 
 			containerId := c.PathParam("containerId")
-			container := types.Container{}
+			container := types.ContainerDTO{}
 
 			err := app.Dao().DB().Select("*").
-				From("containers_registry").
-				Where(dbx.NewExp("container_id = {:id}", dbx.Params{"id": containerId})).
+				From("containers").
+				Where(dbx.NewExp("docker_id = {:id}", dbx.Params{"id": containerId})).
 				One(&container)
 			if err != nil {
 				return apis.NewBadRequestError("This record does not exist.", nil)

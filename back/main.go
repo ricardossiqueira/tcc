@@ -71,6 +71,8 @@ func main() {
 			}
 		})
 
+		e.Router.POST("/docker/containers/new", cn.Create)
+
 		e.Router.GET("/docker/containers/list", cn.List, apis.RequireRecordAuth())
 
 		e.Router.GET("/docker/containers/:status", cn.ListByStatus, apis.RequireRecordAuth())
@@ -79,7 +81,7 @@ func main() {
 
 		e.Router.POST("/docker/containers/:containerId/start", cn.StartContainer, middlewares.RequireContainerOwnership(app))
 
-		e.Router.POST("/docker/containers/:containerId/post", cn.PostToContainer)
+		e.Router.POST("/docker/containers/:containerId/post", cn.PostToContainer, apis.RequireAdminOrRecordAuth())
 
 		e.Router.GET("/llama/test", func(c echo.Context) error {
 			chatCompletion := llm.Run()
@@ -90,57 +92,63 @@ func main() {
 	})
 
 	app.OnModelAfterCreate().Add(func(e *core.ModelEvent) error {
-		if e.Model.TableName() == "generated_scripts" {
-			generated_script := types.GeneratedScript{}
+		if e.Model.TableName() == "scripts" {
+			script := types.ScriptDTO{}
 
-			//GET generated_script
+			//GET script
 			app.Dao().DB().
 				Select("*").
-				From("generated_scripts").
+				From("scripts").
 				Where(dbx.NewExp("id = {:id}", dbx.Params{"id": e.Model.GetId()})).
-				One(&generated_script)
+				One(&script)
 
-			//Parse python_script to .tar
+			//Parse script to .tar
 			var tar bytes.Buffer
-			if err := utils.ScriptToTar(&tar, generated_script.PythonScript); err != nil {
+			if err := utils.ScriptToTar(&tar, script.Script); err != nil {
 				app.Logger().Error(err.Error())
+				return err
 			}
 
 			port, err := services.AllocatePort()
 			if err != nil {
 				app.Logger().Error(err.Error())
+				return err
 			}
 
 			resp, err := docker.CreateContainer(app, dockerCli, dockerCtx, tar, port)
 			if err != nil {
 				app.Logger().Error(err.Error())
+				return err
 			}
 
-			//Create container_registry
-			collection, err := app.Dao().FindCollectionByNameOrId("containers_registry")
+			//Create container
+			collection, err := app.Dao().FindCollectionByNameOrId("containers")
 			if err != nil {
 				app.Logger().Error(err.Error())
+				return err
 			}
 
 			record := models.NewRecord(collection)
 			form := forms.NewRecordUpsert(app, record)
 
 			form.LoadData(map[string]any{
-				"container_id":     resp.ID,
-				"container_status": "Up",
-				"container_image":  docker.GetImage(),
-				"generated_script": generated_script.Id,
-				"port":             port,
+				"docker_id": resp.ID,
+				"status":    "Up",
+				"image":     docker.GetImage(),
+				"script":    script.Id,
+				"port":      port,
+				"owner":     script.Owner,
 			})
 
 			if err := form.Submit(); err != nil {
 				app.Logger().Error(err.Error())
+				return err
 			}
 
 			if err := dockerCli.ContainerStart(dockerCtx, resp.ID, dockerTypes.StartOptions{}); err != nil {
 				app.Logger().Error(err.Error())
+				return err
 			}
-
 		}
 
 		return nil
