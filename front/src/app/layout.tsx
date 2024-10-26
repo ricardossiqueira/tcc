@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { SideMenu } from "@/components/SideMenu";
+import { Header } from "@/components/Header";
 import { ThemeProvider } from "@/utils/providers/ThemeProvider";
 import ReactQueryProvider from "@/utils/providers/ReactQueryProvider";
 import { Toaster } from "@/components/ui/toaster";
@@ -29,9 +29,10 @@ export default function RootLayout({
         >
           <ReactQueryProvider>
             <UserProvider>
-              <SideMenu>
+              <Header />
+              <main>
                 {children}
-              </SideMenu>
+              </main>
               <Toaster />
             </UserProvider>
           </ReactQueryProvider>

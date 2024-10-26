@@ -12,6 +12,7 @@ import {
   useState,
 } from "react";
 import { z } from "zod";
+import { useToast } from "./useToast";
 
 const authUser = "/api/collections/users/auth-with-password";
 const authRefresh = "/api/collections/users/auth-refresh";
@@ -78,6 +79,7 @@ export const UserProvider = ({ children }: UserProviderProps): JSX.Element => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | undefined>(undefined);
   const router = useRouter();
+  const { toast } = useToast()
 
   const fetchUser = useCallback(
     (data: z.infer<typeof loginFormSchema>) => {
@@ -96,13 +98,21 @@ export const UserProvider = ({ children }: UserProviderProps): JSX.Element => {
         console.log(cachedUserProperties);
         localStorage.setItem("user", JSON.stringify(cachedUserProperties));
         router.push("/app");
+        toast({
+          title: "Login successful",
+          description: "Redirecting to app",
+        });
       }).catch((err) => {
         setError(err.response.data as Error);
+        toast({
+          title: "Login failed",
+          description: err.response.data.message,
+        })
       }).finally(() => {
         setIsLoading(false);
       });
     },
-    [router],
+    [router, toast],
   );
 
   const logout = useCallback(() => {
@@ -127,10 +137,14 @@ export const UserProvider = ({ children }: UserProviderProps): JSX.Element => {
     }).catch((err) => {
       setError(err.response.data as Error);
       logout();
+      toast({
+        title: "Failed to refresh user",
+        description: "Redirecting to login",
+      });
     }).finally(() => {
       setIsLoading(false);
     });
-  }, [logout]);
+  }, [logout, toast]);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");

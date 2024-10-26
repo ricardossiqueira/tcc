@@ -39,7 +39,7 @@ export const Template: Story = () => {
       <Button
         onClick={() => {
           toast({
-            title: "Template titl",
+            title: "Template title",
             description: "Template description",
           });
         }}
