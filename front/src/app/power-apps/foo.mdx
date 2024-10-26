@@ -1,0 +1,116 @@
+<div className="bg-gray-900 text-white min-h-screen">
+
+# How to Make an HTTP Request in Microsoft Power Apps
+
+This tutorial will help you connect your Power Apps to external APIs by making HTTP requests using a **custom connector**. With clear steps and visuals, you’ll learn how to configure your API, send a request, and display the response in your app.
+
+</div>
+---
+
+## Prerequisites
+
+<div className="bg-gray-800 p-4 rounded-lg mb-6">
+
+Before getting started, make sure you have:
+
+- A **Microsoft Power Apps** account.
+- Access to **Power Automate** (for automating API calls).
+- Basic understanding of **HTTP methods** like GET and POST.
+
+</div>
+
+---
+
+## Step 1: Set Up a Custom Connector
+
+### 1. Open Power Apps Portal
+
+Head over to the [Power Apps portal](https://make.powerapps.com/).
+
+<div className="my-4">
+  <img src="./images/powerapps-home.png" alt="Power Apps Home" className="rounded-md border border-gray-700" />
+</div>
+
+### 2. Go to Custom Connectors
+
+- In the left-hand menu, click on **Data**.
+- Then click **Custom Connectors**.
+
+<div className="my-4">
+  <img src="./images/custom-connectors.png" alt="Custom Connectors Menu" className="rounded-md border border-gray-700" />
+</div>
+
+### 3. Create a New Custom Connector
+
+- Click on **+ New Custom Connector**.
+- Choose **Create from blank**.
+
+<div className="bg-gray-800 p-4 rounded-lg my-4">
+  <strong>Tip:</strong> Most modern APIs use HTTPS for security. Make sure to select HTTPS for better security.
+</div>
+
+### 4. Fill in Connector Details
+
+- Name your connector.
+- Enter the **Base URL** of the API you want to use.
+- Choose **HTTP** or **HTTPS** based on the API’s requirements.
+
+<div className="my-4">
+  <img src="./images/connector-setup.png" alt="Custom Connector Setup" className="rounded-md border border-gray-700" />
+</div>
+
+---
+
+## Step 2: Define the API Action
+
+### 1. Add a New Action
+
+- Click on **+ New Action**.
+- Provide a name and description of the action (e.g., "Fetch User Data").
+
+### 2. Configure the HTTP Request
+
+- Select the HTTP method (GET, POST, etc.).
+- Enter the **Request URL**, along with any **query parameters** and **headers**.
+
+<div className="my-4">
+  <img src="./images/api-request.png" alt="Configuring API Request" className="rounded-md border border-gray-700" />
+</div>
+
+### 3. Test the Action
+
+- Use the **Test** button to verify the request.
+- If everything is set up correctly, you should see a successful response.
+
+<div className="bg-gray-800 p-4 rounded-lg my-4">
+  <strong>Note:</strong> If your API requires authentication (e.g., OAuth2), make sure you configure it under <em>Security</em>.
+</div>
+
+---
+
+## Step 3: Integrate the API in Power Apps
+
+### 1. Create a New App
+
+- In Power Apps, create a **Canvas App** or a **Model-driven App**.
+
+### 2. Connect to Your Custom Connector
+
+- Go to the **Insert** tab.
+- Select **Connectors** and search for your custom connector.
+
+<div className="my-4">
+  <img src="./images/add-connector.png" alt="Add Connector in Power Apps" className="rounded-md border border-gray-700" />
+</div>
+
+### 3. Add UI Controls
+
+- Add **Text Input**, **Buttons**, and other UI elements as needed.
+- For example, you can create a button to trigger the HTTP request.
+
+### 4. Add a Call to the Connector
+
+- In the **OnSelect** property of the button, call your API using the connector’s action.
+
+```powerapps
+CustomConnectorName.GetUserData(TextInput1.Text)
