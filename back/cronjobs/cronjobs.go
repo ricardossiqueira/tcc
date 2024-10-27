@@ -69,7 +69,7 @@ func ContainerCleaner(app *pocketbase.PocketBase, cn *services.Container) func(e
 				Select("*").
 				From("containers").
 				Where(
-					dbx.NewExp("updated > {:time}", dbx.Params{"time": time.Now().Add(-5 * time.Minute)}),
+					dbx.NewExp("updated > {:time}", dbx.Params{"time": time.Now().UTC().Add(-5 * time.Minute)}),
 				).
 				AndWhere(
 					dbx.NewExp("status = {:status}", dbx.Params{"status": "Up"}),
