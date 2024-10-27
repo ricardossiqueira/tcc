@@ -12,6 +12,7 @@ import (
 	"bytes"
 	"context"
 	"log"
+	"net/http"
 	"os"
 	"time"
 
@@ -83,10 +84,23 @@ func main() {
 
 		e.Router.POST("/docker/containers/:containerId/post", cn.PostToContainer, apis.RequireAdminOrRecordAuth())
 
-		e.Router.GET("/llama/test", func(c echo.Context) error {
-			chatCompletion := llm.Run()
-			return c.JSON(200, chatCompletion)
-		})
+		e.Router.POST("/llm/chat", func(c echo.Context) error {
+			body := types.ChatDTO{}
+			if err := c.Bind(&body); err != nil {
+				return apis.NewBadRequestError(err.Error(), nil)
+			}
+			if body.Message == "" {
+				return apis.NewBadRequestError("Message is required", nil)
+			}
+
+			chatCompletion, err := llm.Run(body.Message)
+			if err != nil {
+				return apis.NewBadRequestError(err.Error(), nil)
+			}
+
+			// return c.JSON(http.StatusOK, map[string]string{"message": chatCompletion.Choices[0].Message.Content})
+			return c.JSON(http.StatusOK, chatCompletion)
+		}, apis.LoadAuthContext(app))
 
 		return nil
 	})

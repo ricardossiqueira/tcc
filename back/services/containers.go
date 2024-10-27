@@ -155,7 +155,7 @@ func (cn Container) Create(c echo.Context) error {
 	form := forms.NewRecordUpsert(cn.app, record)
 
 	form.LoadData(map[string]any{
-		"script":  data.Script,
+		"script":  data.Payload.Choices[0].Message.Content,
 		"payload": data.Payload,
 		"owner":   user.Id,
 	})

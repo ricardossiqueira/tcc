@@ -1,10 +1,12 @@
 package types
 
-import "github.com/pocketbase/pocketbase/tools/types"
+import (
+	"github.com/openai/openai-go"
+	"github.com/pocketbase/pocketbase/tools/types"
+)
 
 type GeneratedScriptDTO struct {
-	Script  string        `db:"script" json:"script"`
-	Payload types.JsonMap `db:"payload" json:"payload"`
+	Payload openai.ChatCompletion `json:"payload"`
 }
 
 type ScriptDTO struct {
@@ -49,4 +51,8 @@ type ContainerListDTO struct {
 	ContainerStatus string `db:"status" json:"status"`
 	ContainerImage  string `db:"image" json:"image"`
 	Port            string `db:"port" json:"port"`
+}
+
+type ChatDTO struct {
+	Message string `json:"message"`
 }
