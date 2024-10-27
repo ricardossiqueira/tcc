@@ -78,11 +78,11 @@ func main() {
 
 		e.Router.GET("/docker/containers/:status", cn.ListByStatus, apis.RequireRecordAuth())
 
-		e.Router.POST("/docker/containers/:containerId/stop", cn.StopContainer, middlewares.RequireContainerOwnership(app))
+		e.Router.POST("/docker/containers/:dockerId/stop", cn.StopContainer, middlewares.RequireContainerOwnership(app))
 
-		e.Router.POST("/docker/containers/:containerId/start", cn.StartContainer, middlewares.RequireContainerOwnership(app))
+		e.Router.POST("/docker/containers/:dockerId/start", cn.StartContainer, middlewares.RequireContainerOwnership(app))
 
-		e.Router.POST("/docker/containers/:containerId/post", cn.PostToContainer, apis.RequireAdminOrRecordAuth())
+		e.Router.POST("/docker/containers/:dockerId/post", cn.PostToContainer, apis.RequireAdminOrRecordAuth())
 
 		e.Router.POST("/llm/chat", func(c echo.Context) error {
 			body := types.ChatDTO{}

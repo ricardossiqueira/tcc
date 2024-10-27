@@ -1,12 +1,15 @@
 package services
 
 import (
+	"back/docker"
 	"back/types"
+	"back/utils"
+	"bytes"
 	"context"
 	"net/http"
 	"strings"
 
-	"github.com/docker/docker/api/types/container"
+	dockerTypes "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/dbx"
@@ -49,7 +52,7 @@ func (cn Container) ListByStatus(c echo.Context) error {
 	status := c.PathParam("status")
 	var containers_list []types.ContainerStatusDTO
 
-	containers, err := cn.DockerCli.ContainerList(cn.DockerCtx, container.ListOptions{All: true})
+	containers, err := cn.DockerCli.ContainerList(cn.DockerCtx, dockerTypes.ListOptions{All: true})
 	if err != nil {
 		panic(err)
 	}
@@ -57,18 +60,18 @@ func (cn Container) ListByStatus(c echo.Context) error {
 	for _, ctr := range containers {
 		ctrStatus, _, _ := strings.Cut(ctr.Status, " ")
 		if ctrStatus == status {
-			containers_list = append(containers_list, types.ContainerStatusDTO{ContainerId: ctr.ID, ImageName: ctr.Image, Status: ctrStatus})
+			containers_list = append(containers_list, types.ContainerStatusDTO{DockerId: ctr.ID, ImageName: ctr.Image, Status: ctrStatus})
 		}
 	}
 	return c.JSON(http.StatusOK, containers_list)
 }
 
 func (cn Container) StopContainer(c echo.Context) error {
-	containerId := c.PathParam("containerId")
-	if err := cn.DockerCli.ContainerStop(cn.DockerCtx, containerId, container.StopOptions{}); err != nil {
+	dockerId := c.PathParam("dockerId")
+	if err := cn.DockerCli.ContainerStop(cn.DockerCtx, dockerId, dockerTypes.StopOptions{}); err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
-	if err := cn.DockerCli.ContainerRemove(cn.DockerCtx, containerId, container.RemoveOptions{}); err != nil {
+	if err := cn.DockerCli.ContainerRemove(cn.DockerCtx, dockerId, dockerTypes.RemoveOptions{}); err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
 
@@ -76,7 +79,7 @@ func (cn Container) StopContainer(c echo.Context) error {
 
 	err := cn.app.Dao().DB().Select("*").
 		From("containers").
-		Where(dbx.NewExp("docker_id = {:id}", dbx.Params{"id": containerId})).
+		Where(dbx.NewExp("docker_id = {:id}", dbx.Params{"id": dockerId})).
 		One(&container)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, err)
@@ -97,32 +100,66 @@ func (cn Container) StopContainer(c echo.Context) error {
 	return c.JSON(http.StatusOK, nil)
 }
 
-// !WARN: DEPRECATED
 func (cn Container) StartContainer(c echo.Context) error {
-	containerId := c.PathParam("containerId")
-	if err := cn.DockerCli.ContainerStart(cn.DockerCtx, containerId, container.StartOptions{}); err != nil {
-		return c.JSON(http.StatusBadRequest, err)
-	}
+	dockerId := c.PathParam("dockerId")
 
 	container := types.ContainerDTO{}
-
 	err := cn.app.Dao().DB().Select("*").
 		From("containers").
-		Where(dbx.NewExp("docker_id = {:id}", dbx.Params{"id": containerId})).
+		Where(dbx.NewExp("docker_id = {:id}", dbx.Params{"id": dockerId})).
 		One(&container)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
+		return apis.NewBadRequestError(err.Error(), nil)
+	}
+
+	script := types.ScriptDTO{}
+	err = cn.app.Dao().DB().Select("*").
+		From("scripts").
+		Where(dbx.NewExp("id = {:id}", dbx.Params{"id": container.Script})).
+		One(&script)
+	if err != nil {
+		return apis.NewBadRequestError(err.Error(), nil)
+	}
+
+	//Parse script to .tar
+	var tar bytes.Buffer
+	if err := utils.ScriptToTar(&tar, script.Script); err != nil {
+		cn.app.Logger().Error(err.Error())
+		return err
+	}
+
+	port, err := AllocatePort()
+	if err != nil {
+		cn.app.Logger().Error(err.Error())
+		return err
+	}
+
+	resp, err := docker.CreateContainer(cn.app, cn.DockerCli, cn.DockerCtx, tar, port)
+	if err != nil {
+		cn.app.Logger().Error(err.Error())
+		return err
 	}
 
 	record, err := cn.app.Dao().FindRecordById("containers", container.Id)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
+		cn.app.Logger().Error(err.Error())
+		return err
 	}
 
-	record.Set("container_status", "Up")
-	record.Set("port", 5000)
+	form := forms.NewRecordUpsert(cn.app, record)
 
-	if err := cn.app.Dao().SaveRecord(record); err != nil {
+	form.LoadData(map[string]any{
+		"docker_id": resp.ID,
+		"status":    "Up",
+		"port":      port,
+	})
+
+	if err := form.Submit(); err != nil {
+		return err
+	}
+
+	if err := cn.DockerCli.ContainerStart(cn.DockerCtx, resp.ID, dockerTypes.StartOptions{}); err != nil {
+		cn.app.Logger().Error(err.Error())
 		return err
 	}
 

@@ -20,8 +20,8 @@ type ScriptDTO struct {
 
 type ContainerDTO struct {
 	Id              string `db:"id" json:"id"`
-	ContainerId     string `db:"docker_id" json:"docker_id"`
-	GeneratedScript string `db:"script" json:"script"`
+	DockerId        string `db:"docker_id" json:"docker_id"`
+	Script          string `db:"script" json:"script"`
 	ContainerStatus string `db:"status" json:"status"`
 	ContainerImage  string `db:"image" json:"image"`
 	Owner           string `db:"owner" json:"owner"`
@@ -31,7 +31,7 @@ type ContainerDTO struct {
 
 type ContainerCretateDTO struct {
 	Id              string `db:"id" json:"id"`
-	ContainerId     string `db:"docker_id" json:"docker_id"`
+	DockerId        string `db:"docker_id" json:"docker_id"`
 	GeneratedScript string `db:"script" json:"script"`
 	ContainerStatus string `db:"status" json:"status"`
 	ContainerImage  string `db:"image" json:"image"`
@@ -40,13 +40,13 @@ type ContainerCretateDTO struct {
 }
 
 type ContainerStatusDTO struct {
-	ContainerId string `json:"docker_id"`
-	ImageName   string `json:"image_name"`
-	Status      string `json:"status"`
+	DockerId  string `json:"docker_id"`
+	ImageName string `json:"image_name"`
+	Status    string `json:"status"`
 }
 
 type ContainerListDTO struct {
-	ContainerId     string `db:"docker_id" json:"id"`
+	DockerId        string `db:"docker_id" json:"id"`
 	GeneratedScript string `db:"script" json:"script"`
 	ContainerStatus string `db:"status" json:"status"`
 	ContainerImage  string `db:"image" json:"image"`
@@ -54,9 +54,9 @@ type ContainerListDTO struct {
 }
 
 type ContainerCleanerDTO struct {
-	Id          string `db:"id" json:"id"`
-	ContainerId string `db:"docker_id" json:"container_id"`
-	Status      string `db:"status" json:"status"`
+	Id       string `db:"id" json:"id"`
+	DockerId string `db:"docker_id" json:"container_id"`
+	Status   string `db:"status" json:"status"`
 }
 
 type ChatDTO struct {
