@@ -33,6 +33,18 @@ func NewContainer(app *pocketbase.PocketBase, dockerCtx context.Context, dockerC
 	}
 }
 
+func (cn Container) GetContainerById(containerId string) (types.ContainerDTO, error) {
+	container := types.ContainerDTO{}
+	err := cn.app.Dao().DB().Select("*").
+		From("containers").
+		Where(dbx.NewExp("id = {:id}", dbx.Params{"id": containerId})).
+		One(&container)
+	if err != nil {
+		return container, err
+	}
+	return container, nil
+}
+
 func (cn Container) List(c echo.Context) error {
 
 	containers := []types.ContainerListDTO{}
@@ -54,7 +66,7 @@ func (cn Container) ListByStatus(c echo.Context) error {
 
 	containers, err := cn.DockerCli.ContainerList(cn.DockerCtx, dockerTypes.ListOptions{All: true})
 	if err != nil {
-		panic(err)
+		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
 	for _, ctr := range containers {
@@ -67,47 +79,38 @@ func (cn Container) ListByStatus(c echo.Context) error {
 }
 
 func (cn Container) StopContainer(c echo.Context) error {
-	dockerId := c.PathParam("dockerId")
-	if err := cn.DockerCli.ContainerStop(cn.DockerCtx, dockerId, dockerTypes.StopOptions{}); err != nil {
-		return c.JSON(http.StatusBadRequest, err)
-	}
-	if err := cn.DockerCli.ContainerRemove(cn.DockerCtx, dockerId, dockerTypes.RemoveOptions{}); err != nil {
-		return c.JSON(http.StatusBadRequest, err)
-	}
+	containerId := c.PathParam("id")
 
-	container := types.ContainerDTO{}
-
-	err := cn.app.Dao().DB().Select("*").
-		From("containers").
-		Where(dbx.NewExp("docker_id = {:id}", dbx.Params{"id": dockerId})).
-		One(&container)
+	container, err := cn.GetContainerById(containerId)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
+		return apis.NewBadRequestError(err.Error(), nil)
+	}
+	if err := cn.DockerCli.ContainerStop(cn.DockerCtx, container.DockerId, dockerTypes.StopOptions{}); err != nil {
+		return apis.NewBadRequestError(err.Error(), nil)
+	}
+	if err := cn.DockerCli.ContainerRemove(cn.DockerCtx, container.DockerId, dockerTypes.RemoveOptions{}); err != nil {
+		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
 	record, err := cn.app.Dao().FindRecordById("containers", container.Id)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
+		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
 	record.Set("status", "Stopped")
 	record.Set("port", 0)
 
 	if err := cn.app.Dao().SaveRecord(record); err != nil {
-		return err
+		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
 	return c.JSON(http.StatusOK, nil)
 }
 
 func (cn Container) StartContainer(c echo.Context) error {
-	dockerId := c.PathParam("dockerId")
+	containerId := c.PathParam("id")
 
-	container := types.ContainerDTO{}
-	err := cn.app.Dao().DB().Select("*").
-		From("containers").
-		Where(dbx.NewExp("docker_id = {:id}", dbx.Params{"id": dockerId})).
-		One(&container)
+	container, err := cn.GetContainerById(containerId)
 	if err != nil {
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
@@ -124,26 +127,22 @@ func (cn Container) StartContainer(c echo.Context) error {
 	//Parse script to .tar
 	var tar bytes.Buffer
 	if err := utils.ScriptToTar(&tar, script.Script); err != nil {
-		cn.app.Logger().Error(err.Error())
-		return err
+		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
 	port, err := AllocatePort()
 	if err != nil {
-		cn.app.Logger().Error(err.Error())
-		return err
+		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
 	resp, err := docker.CreateContainer(cn.app, cn.DockerCli, cn.DockerCtx, tar, port)
 	if err != nil {
-		cn.app.Logger().Error(err.Error())
-		return err
+		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
-	record, err := cn.app.Dao().FindRecordById("containers", container.Id)
+	record, err := cn.app.Dao().FindRecordById("containers", containerId)
 	if err != nil {
-		cn.app.Logger().Error(err.Error())
-		return err
+		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
 	form := forms.NewRecordUpsert(cn.app, record)
@@ -155,12 +154,11 @@ func (cn Container) StartContainer(c echo.Context) error {
 	})
 
 	if err := form.Submit(); err != nil {
-		return err
+		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
 	if err := cn.DockerCli.ContainerStart(cn.DockerCtx, resp.ID, dockerTypes.StartOptions{}); err != nil {
-		cn.app.Logger().Error(err.Error())
-		return err
+		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
 	return c.JSON(http.StatusOK, nil)
@@ -176,16 +174,15 @@ func (cn Container) PostToContainer(c echo.Context) error {
 func (cn Container) Create(c echo.Context) error {
 	user, _ := c.Get(apis.ContextAuthRecordKey).(*models.Record)
 
-	data := types.GeneratedScriptDTO{}
+	data := types.ScriptCreateDTO{}
 	if err := c.Bind(&data); err != nil {
-		return c.JSON(http.StatusBadRequest, err)
+		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
 	//CREATE script
 	collection, err := cn.app.Dao().FindCollectionByNameOrId("scripts")
 	if err != nil {
-		cn.app.Logger().Error(err.Error())
-		return err
+		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
 	record := models.NewRecord(collection)
@@ -198,8 +195,7 @@ func (cn Container) Create(c echo.Context) error {
 	})
 
 	if err := form.Submit(); err != nil {
-		cn.app.Logger().Error(err.Error())
-		return err
+		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
 	return nil

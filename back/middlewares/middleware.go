@@ -18,12 +18,12 @@ func RequireContainerOwnership(app *pocketbase.PocketBase) echo.MiddlewareFunc {
 				return apis.NewUnauthorizedError("The request requires valid record authorization token to be set.", nil)
 			}
 
-			containerId := c.PathParam("containerId")
+			containerId := c.PathParam("id")
 			container := types.ContainerDTO{}
 
 			err := app.Dao().DB().Select("*").
 				From("containers").
-				Where(dbx.NewExp("docker_id = {:id}", dbx.Params{"id": containerId})).
+				Where(dbx.NewExp("id = {:id}", dbx.Params{"id": containerId})).
 				One(&container)
 			if err != nil {
 				return apis.NewBadRequestError("This record does not exist.", nil)

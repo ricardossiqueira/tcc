@@ -29,32 +29,29 @@ func logContainerCleanerError(app *pocketbase.PocketBase, err error, containerId
 	)
 }
 
-func cleanContainer(app *pocketbase.PocketBase, cn *services.Container, container types.ContainerCleanerDTO) {
-	if err := cn.DockerCli.ContainerStop(cn.DockerCtx, container.ContainerId, dockerContainer.StopOptions{}); err != nil {
-		logContainerCleanerError(app, err, container.ContainerId)
+func cleanContainer(app *pocketbase.PocketBase, cn *services.Container, container types.ContainerDTO) {
+	if err := cn.DockerCli.ContainerStop(cn.DockerCtx, container.Id, dockerContainer.StopOptions{}); err != nil {
+		logContainerCleanerError(app, err, container.Id)
 	}
-	if err := cn.DockerCli.ContainerRemove(cn.DockerCtx, container.ContainerId, dockerContainer.RemoveOptions{}); err != nil {
-		logContainerCleanerError(app, err, container.ContainerId)
+	if err := cn.DockerCli.ContainerRemove(cn.DockerCtx, container.Id, dockerContainer.RemoveOptions{}); err != nil {
+		logContainerCleanerError(app, err, container.Id)
 	}
 
-	err := app.Dao().DB().Select("*").
-		From("containers").
-		Where(dbx.NewExp("docker_id = {:id}", dbx.Params{"id": container.ContainerId})).
-		One(&container)
+	container, err := cn.GetContainerById(container.Id)
 	if err != nil {
-		logContainerCleanerError(app, err, container.ContainerId)
+		logContainerCleanerError(app, err, container.Id)
 	}
 
 	record, err := app.Dao().FindRecordById("containers", container.Id)
 	if err != nil {
-		logContainerCleanerError(app, err, container.ContainerId)
+		logContainerCleanerError(app, err, container.Id)
 	}
 
 	record.Set("status", "Stopped")
 	record.Set("port", 0)
 
 	if err := app.Dao().SaveRecord(record); err != nil {
-		logContainerCleanerError(app, err, container.ContainerId)
+		logContainerCleanerError(app, err, container.Id)
 	}
 }
 
@@ -63,7 +60,7 @@ func ContainerCleaner(app *pocketbase.PocketBase, cn *services.Container) func(e
 		scheduler := cron.New()
 
 		scheduler.MustAdd("hello", "*/1 * * * *", func() {
-			containers := []types.ContainerCleanerDTO{}
+			containers := []types.ContainerDTO{}
 
 			app.Dao().DB().
 				Select("*").
