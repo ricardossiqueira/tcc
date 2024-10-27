@@ -10,12 +10,12 @@ type GeneratedScriptDTO struct {
 }
 
 type ScriptDTO struct {
-	Id        string        `db:"id" json:"id"`
-	Script    string        `db:"script" json:"script"`
-	Payload   types.JsonMap `db:"payload" json:"payload"`
-	Owner     string        `db:"owner" json:"owner"`
-	CreatedAt string        `db:"created_at" json:"created_at"`
-	UpdateAt  string        `db:"updated_at" json:"updated_at"`
+	Id      string        `db:"id" json:"id"`
+	Script  string        `db:"script" json:"script"`
+	Payload types.JsonMap `db:"payload" json:"payload"`
+	Owner   string        `db:"owner" json:"owner"`
+	Created string        `db:"created" json:"created"`
+	Update  string        `db:"updated" json:"updated"`
 }
 
 type ContainerDTO struct {
@@ -25,8 +25,8 @@ type ContainerDTO struct {
 	ContainerStatus string `db:"status" json:"status"`
 	ContainerImage  string `db:"image" json:"image"`
 	Owner           string `db:"owner" json:"owner"`
-	CreatedAt       string `db:"created_at" json:"created_at"`
-	UpdatedAt       string `db:"updated_at" json:"updated_at"`
+	Created         string `db:"created" json:"created"`
+	Update          string `db:"updated" json:"updated"`
 }
 
 type ContainerCretateDTO struct {
@@ -51,6 +51,12 @@ type ContainerListDTO struct {
 	ContainerStatus string `db:"status" json:"status"`
 	ContainerImage  string `db:"image" json:"image"`
 	Port            string `db:"port" json:"port"`
+}
+
+type ContainerCleanerDTO struct {
+	Id          string `db:"id" json:"id"`
+	ContainerId string `db:"docker_id" json:"container_id"`
+	Status      string `db:"status" json:"status"`
 }
 
 type ChatDTO struct {

@@ -18,15 +18,15 @@ import (
 
 type Container struct {
 	app       *pocketbase.PocketBase
-	dockerCtx context.Context
-	dockerCli *client.Client
+	DockerCtx context.Context
+	DockerCli *client.Client
 }
 
 func NewContainer(app *pocketbase.PocketBase, dockerCtx context.Context, dockerCli *client.Client) *Container {
 	return &Container{
 		app:       app,
-		dockerCtx: dockerCtx,
-		dockerCli: dockerCli,
+		DockerCtx: dockerCtx,
+		DockerCli: dockerCli,
 	}
 }
 
@@ -49,7 +49,7 @@ func (cn Container) ListByStatus(c echo.Context) error {
 	status := c.PathParam("status")
 	var containers_list []types.ContainerStatusDTO
 
-	containers, err := cn.dockerCli.ContainerList(cn.dockerCtx, container.ListOptions{All: true})
+	containers, err := cn.DockerCli.ContainerList(cn.DockerCtx, container.ListOptions{All: true})
 	if err != nil {
 		panic(err)
 	}
@@ -65,10 +65,10 @@ func (cn Container) ListByStatus(c echo.Context) error {
 
 func (cn Container) StopContainer(c echo.Context) error {
 	containerId := c.PathParam("containerId")
-	if err := cn.dockerCli.ContainerStop(cn.dockerCtx, containerId, container.StopOptions{}); err != nil {
+	if err := cn.DockerCli.ContainerStop(cn.DockerCtx, containerId, container.StopOptions{}); err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
-	if err := cn.dockerCli.ContainerRemove(cn.dockerCtx, containerId, container.RemoveOptions{}); err != nil {
+	if err := cn.DockerCli.ContainerRemove(cn.DockerCtx, containerId, container.RemoveOptions{}); err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
 
@@ -100,7 +100,7 @@ func (cn Container) StopContainer(c echo.Context) error {
 // !WARN: DEPRECATED
 func (cn Container) StartContainer(c echo.Context) error {
 	containerId := c.PathParam("containerId")
-	if err := cn.dockerCli.ContainerStart(cn.dockerCtx, containerId, container.StartOptions{}); err != nil {
+	if err := cn.DockerCli.ContainerStart(cn.DockerCtx, containerId, container.StartOptions{}); err != nil {
 		return c.JSON(http.StatusBadRequest, err)
 	}
 

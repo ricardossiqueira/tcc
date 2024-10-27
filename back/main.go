@@ -43,7 +43,7 @@ func main() {
 
 	cn := services.NewContainer(app, dockerCtx, dockerCli)
 
-	app.OnBeforeServe().Add(cronjobs.ContainerCleaner(app))
+	app.OnBeforeServe().Add(cronjobs.ContainerCleaner(app, cn))
 	app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
 		e.Router.GET("/*", apis.StaticDirectoryHandler(os.DirFS("./pb_public"), false))
 
