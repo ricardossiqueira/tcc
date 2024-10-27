@@ -1,19 +1,19 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardTitle } from "../ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card.tsx";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from "../ui/table";
-import { Button } from "../ui/button";
+} from "../ui/table.tsx";
+import { Button } from "../ui/button.tsx";
 import { ReloadIcon } from "@radix-ui/react-icons";
-import { api } from "@/api/axios";
+import { api } from "../../api/axios.ts";
+import React from "react";
 
 export function ContainerManagement() {
   async function getUserContainers() {
@@ -35,27 +35,28 @@ export function ContainerManagement() {
   }
 
   return (
-    <Card className="w-full rounded-md p-5">
-      <CardTitle className="flex justify-between items-center">
-        Your Containers
-        <Button
-          onClick={() => refetch()}
-          variant={"ghost"}
-          size={"icon"}
-          className="rounded-full"
-        >
-          <ReloadIcon />
-          <span className="sr-only">
-            Reload
-          </span>
-        </Button>
-      </CardTitle>
+    <Card className="rounded-md h-fit">
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between">
+          Your Containers
+          <Button
+            onClick={() => refetch()}
+            variant={"ghost"}
+            size={"icon"}
+            className="rounded-full"
+          >
+            <ReloadIcon />
+            <span className="sr-only">
+              Reload
+            </span>
+          </Button>
+        </CardTitle>
+      </CardHeader>
       <CardContent>
         <Table>
-          <TableCaption>A list of your recent invoices.</TableCaption>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[100px]">ID</TableHead>
+              <TableHead>ID</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Image</TableHead>
               <TableHead className="text-right">Options</TableHead>
@@ -69,7 +70,7 @@ export function ContainerManagement() {
                   <TableCell>{container.status ?? "N/A"}</TableCell>
                   <TableCell>{container.image ?? "N/A"}</TableCell>
                   <TableCell className="text-right">
-                    Foo
+                    ...
                   </TableCell>
                 </TableRow>
               );

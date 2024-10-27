@@ -8,15 +8,12 @@ export const Counter = () => {
   useEffect(() => {
     const eventSource = new EventSource("http://localhost:8090/api/sse");
 
-    eventSource.onopen = () => console.log(">>> connection opened");
-
     eventSource.onmessage = (event) => {
       const newMessage = event.data;
       setMessages((prevMessages: string[]) => [...prevMessages, newMessage]);
     };
 
-    eventSource.onerror = (error) => {
-      console.log(">>> failed: ", error);
+    eventSource.onerror = () => {
       eventSource.close();
     };
 

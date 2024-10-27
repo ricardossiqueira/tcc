@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Header } from "@/components/Header";
-import { ThemeProvider } from "@/utils/providers/ThemeProvider";
-import ReactQueryProvider from "@/utils/providers/ReactQueryProvider";
-import { Toaster } from "@/components/ui/toaster";
-import { UserProvider } from "@/hooks/useUser";
+import React from "react";
+import { Header } from "../components/Header.tsx";
+import { Toaster } from "../components/ui/toaster.tsx";
+import { UserProvider } from "../hooks/useUser.tsx";
+import ReactQueryProvider from "../utils/providers/ReactQueryProvider.tsx";
+import { ThemeProvider } from "../utils/providers/ThemeProvider.tsx";
 
 export const metadata: Metadata = {
   title: "Create Next App",

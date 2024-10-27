@@ -7,47 +7,57 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import CodeEditor from "@/components/CodeEditor";
-import { Textarea } from "@/components/ui/textarea";
+} from "../../components/ui/card.tsx";
+import { Button } from "../../components/ui/button.tsx";
+import CodeEditor from "../../components/CodeEditor/index.tsx";
+import { Textarea } from "../../components/ui/textarea.tsx";
 import { ChangeEvent, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { ContainerManagement } from "@/components/ContainerManagement";
-import { api } from "@/api/axios";
-import useUser from "@/hooks/useUser";
+import { ContainerManagement } from "../../components/ContainerManagement/index.tsx";
+import { api } from "../../api/axios.ts";
+import { useToast } from "../../hooks/useToast.ts";
+import { ILlmResponse } from "../../interfaces/llm.ts";
+import React from "react";
 
 export default function App() {
   const [payload, setPayload] = useState(
     "Generate a function to say hello world!",
   );
-  const [response, _setResponse] = useState("");
-  const { user } = useUser();
+  const [response, setResponse] = useState<ILlmResponse>();
+  const { toast } = useToast();
 
   const handleSetPayload = (e: ChangeEvent<HTMLTextAreaElement>) =>
     setPayload(e.target.value);
 
-  // TODO: Use the golang be to handle this
-  // const llamaMutation = useMutation(
-  //   {
-  //     mutationFn: () => {
-  //       apiRequestBase.messages[1].content = payload
-  //       return llamaAPI.run(apiRequestBase)
-  //     }, onSuccess: (res) => {
-  //       setResponse(trimCodeFormat(res.choices[0].message.content))
-  //     }
-  //   }
-  // )
+  const generateMutation = useMutation(
+    {
+      mutationFn: () => {
+        return api.post<ILlmResponse>(
+          "/llm/chat",
+          {
+            "message": payload,
+          },
+        );
+      },
+      onSuccess: (res) => {
+        setResponse(res.data);
+      },
+      onError: (err) => {
+        toast({
+          title: "Error",
+          description: err.message,
+        });
+      },
+    },
+  );
 
   const deployMutation = useMutation(
     {
       mutationFn: () => {
         return api.post(
-          "http://localhost:8090/api/collections/generated_scripts/records",
+          "/docker/containers/new",
           {
-            "python_script": response,
-            "payload": {},
-            "owner": user?.id,
+            payload: response,
           },
         );
       },
@@ -55,8 +65,8 @@ export default function App() {
   );
 
   return (
-    <section className="flex flex-col sm:flex-row p-3">
-      <div className="flex justify-end px-1">
+    <section className="flex flex-col w-full sm:flex-row p-3">
+      <div>
         <Card className="w-full rounded-md h-fit">
           <CardHeader className="px-5 py-4">
             <CardTitle>
@@ -75,39 +85,39 @@ export default function App() {
             />
           </CardContent>
           <CardFooter className="px-5">
-            <Button onClick={() => {}}>Generate</Button>
-          </CardFooter>
-        </Card>
-      </div>
-
-      <div className="flex justify-end px-1">
-        <Card className="w-full rounded-md">
-          <CardHeader>
-            <CardTitle>
-              Your generated function
-            </CardTitle>
-            <CardDescription>
-              This is your AI generated function! Here you can edit it before
-              deploing.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <CodeEditor value={response} />
-          </CardContent>
-          <CardFooter>
             <Button
-              loading={deployMutation.isPending}
-              onClick={() => deployMutation.mutate()}
+              loading={generateMutation.isPending}
+              onClick={() => generateMutation.mutate()}
             >
-              Deploy
+              Generate
             </Button>
           </CardFooter>
         </Card>
-      </div>
-
-      <div className="flex justify-end px-1">
         <ContainerManagement />
       </div>
+
+      <Card className="rounded-md">
+        <CardHeader>
+          <CardTitle>
+            Your generated function
+          </CardTitle>
+          <CardDescription>
+            This is your AI generated function! Here you can edit it before
+            deploing.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <CodeEditor value={response?.choices[0].message.content} />
+        </CardContent>
+        <CardFooter>
+          <Button
+            loading={deployMutation.isPending}
+            onClick={() => deployMutation.mutate()}
+          >
+            Deploy
+          </Button>
+        </CardFooter>
+      </Card>
     </section>
   );
 }

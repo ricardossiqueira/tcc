@@ -1,12 +1,13 @@
-import { Button } from "@/components/ui/button";
 import {
   Drawer as DrawerUI,
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from "@/components/ui/drawer";
-import { Counter } from "./Counter";
+} from "../../components/ui/drawer.tsx";
+import { Counter } from "./Counter.tsx";
+import React from "react";
+import { Button } from "../ui/button.tsx";
 
 export default function Drawer() {
   return (

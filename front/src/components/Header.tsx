@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { ModeToggle } from "./ThemeDropdown";
 import { Button } from "./ui/button";

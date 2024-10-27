@@ -1,6 +1,5 @@
 "use client";
 
-import { parseSnakeCaseToTitleCase } from "@/helpers/string";
 import {
   Select,
   SelectContent,
@@ -9,6 +8,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@radix-ui/react-select";
+import React from "react";
+import { parseSnakeCaseToTitleCase } from "../../helpers/string.ts";
 
 export type theme =
   | "ambiance"

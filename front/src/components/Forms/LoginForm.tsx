@@ -1,9 +1,12 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
+import useUser from "../../hooks/useUser.tsx";
+import { loginFormSchema } from "../../zod/login.ts";
+import { Button } from "../ui/button.tsx";
 import {
   Form,
   FormControl,
@@ -11,10 +14,8 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { loginFormSchema } from "@/schemas/login";
-import useUser from "@/hooks/useUser";
+} from "../ui/form.tsx";
+import { Input } from "../ui/input.tsx";
 
 export default function LoginForm() {
   const { fetchUser, isLoading } = useUser();
@@ -24,7 +25,6 @@ export default function LoginForm() {
   });
 
   function onSubmit(values: z.infer<typeof loginFormSchema>) {
-    console.log(values);
     fetchUser(values);
   }
 

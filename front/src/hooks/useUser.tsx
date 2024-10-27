@@ -1,7 +1,7 @@
 "use client";
 
 import { api } from "@/api/axios";
-import { loginFormSchema } from "@/schemas/login";
+import { loginFormSchema } from "@/zod/login";
 import { useRouter } from "next/navigation";
 import {
   createContext,
@@ -51,18 +51,16 @@ interface UserContextType {
   error: Error | undefined;
   fetchUser: (data: z.infer<typeof loginFormSchema>) => void;
   logout: () => void;
-}
-
-interface UserProviderProps {
-  children: ReactNode;
+  redirect: () => void;
 }
 
 const UserContext = createContext<UserContextType>({
   user: null,
   isLoading: true,
   error: undefined,
-  fetchUser: () => { },
-  logout: () => { },
+  fetchUser: () => {},
+  logout: () => {},
+  redirect: () => {},
 });
 
 export interface CachedUserProperties {
@@ -74,12 +72,14 @@ export interface CachedUserProperties {
   cacheTime: number;
 }
 
-export const UserProvider = ({ children }: UserProviderProps): JSX.Element => {
+export const UserProvider = (
+  { children }: { children: ReactNode },
+): JSX.Element => {
   const [user, setUser] = useState<CachedUserProperties | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | undefined>(undefined);
   const router = useRouter();
-  const { toast } = useToast()
+  const { toast } = useToast();
 
   const fetchUser = useCallback(
     (data: z.infer<typeof loginFormSchema>) => {
@@ -95,7 +95,6 @@ export const UserProvider = ({ children }: UserProviderProps): JSX.Element => {
           cacheTime: Date.now(),
         };
         setUser(cachedUserProperties);
-        console.log(cachedUserProperties);
         localStorage.setItem("user", JSON.stringify(cachedUserProperties));
         router.push("/app");
         toast({
@@ -107,7 +106,7 @@ export const UserProvider = ({ children }: UserProviderProps): JSX.Element => {
         toast({
           title: "Login failed",
           description: err.response.data.message,
-        })
+        });
       }).finally(() => {
         setIsLoading(false);
       });
@@ -151,7 +150,7 @@ export const UserProvider = ({ children }: UserProviderProps): JSX.Element => {
     (async () => {
       if (storedUser && isLoading) {
         setUser(JSON.parse(storedUser));
-        await refreshUser();
+        refreshUser();
       }
       setIsLoading(false);
     })();
@@ -170,12 +169,17 @@ export const UserProvider = ({ children }: UserProviderProps): JSX.Element => {
     return () => removeEventListener("focus", onFocus);
   }, [refreshUser, isLoading]);
 
+  const redirect = useCallback(() => {
+    if (user) router.push("/app");
+  }, [router, user]);
+
   const userContextValue: UserContextType = {
     user,
     isLoading,
     error,
     fetchUser,
     logout,
+    redirect,
   };
 
   return (

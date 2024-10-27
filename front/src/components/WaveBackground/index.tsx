@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useRef } from 'react';
-import * as THREE from 'three';
-import Stats from 'three/examples/jsm/libs/stats.module.js';
+import React, { useEffect, useRef } from "react";
+import * as THREE from "three";
+import Stats from "three/examples/jsm/libs/stats.module.js";
 
 const SEPARATION = 100;
 const AMOUNTX = 160;
@@ -19,7 +19,12 @@ const WaveParticles: React.FC = () => {
     if (!container) return;
 
     // Set up camera with an isometric perspective
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000);
+    const camera = new THREE.PerspectiveCamera(
+      75,
+      window.innerWidth / window.innerHeight,
+      1,
+      10000,
+    );
     camera.position.set(0, 600, 1200); // Move camera to an isometric angle
     camera.lookAt(0, 0, 0); // Center the camera on the origin
 
@@ -41,7 +46,7 @@ const WaveParticles: React.FC = () => {
     }
 
     const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
 
     const material = new THREE.ShaderMaterial({
       uniforms: {
@@ -92,7 +97,7 @@ const WaveParticles: React.FC = () => {
       renderer.setSize(window.innerWidth, window.innerHeight);
     };
 
-    window.addEventListener('resize', onWindowResize);
+    window.addEventListener("resize", onWindowResize);
 
     const animate = () => {
       requestAnimationFrame(animate);
@@ -101,7 +106,8 @@ const WaveParticles: React.FC = () => {
     };
 
     const render = () => {
-      const positions = particles.geometry.attributes.position.array as Float32Array;
+      const positions = particles.geometry.attributes.position
+        .array as Float32Array;
       let i = 0;
 
       for (let ix = 0; ix < AMOUNTX; ix++) {
@@ -121,7 +127,7 @@ const WaveParticles: React.FC = () => {
     animate();
 
     return () => {
-      window.removeEventListener('resize', onWindowResize);
+      window.removeEventListener("resize", onWindowResize);
       renderer.dispose();
     };
   }, []);
@@ -129,7 +135,7 @@ const WaveParticles: React.FC = () => {
   return (
     <div
       ref={containerRef}
-      style={{ touchAction: 'none' }}
+      style={{ touchAction: "none" }}
       className="fixed inset-0 w-full h-full -z-10"
     >
       <div id="info"></div>
