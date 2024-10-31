@@ -14,6 +14,10 @@ import { Button } from "../ui/button.tsx";
 import { ReloadIcon } from "@radix-ui/react-icons";
 import { api } from "../../api/axios.ts";
 import React from "react";
+import Drawer from "../../components/Drawer/index.tsx";
+import { HandleContainerButton } from "../HandleContainerButton.tsx";
+import { GET } from "../Drawer/GET.tsx";
+import { POST } from "../Drawer/POST.tsx";
 
 export function ContainerManagement() {
   async function getUserContainers() {
@@ -25,6 +29,7 @@ export function ContainerManagement() {
     refetchOnWindowFocus: true,
     queryKey: ["getUserContainers"],
     queryFn: () => getUserContainers(),
+    refetchInterval: 5000,
   });
 
   interface IContainer {
@@ -35,7 +40,7 @@ export function ContainerManagement() {
   }
 
   return (
-    <Card className="rounded-md h-fit">
+    <Card className="h-full">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           Your Containers
@@ -69,8 +74,26 @@ export function ContainerManagement() {
                   <TableCell className="font-medium">{container.id}</TableCell>
                   <TableCell>{container.status ?? "N/A"}</TableCell>
                   <TableCell>{container.image ?? "N/A"}</TableCell>
-                  <TableCell className="text-right">
-                    ...
+                  <TableCell className="text-right flex justify-end">
+                    {container.status === "Up" &&
+                      (
+                        <div>
+                          <span className="mr-2">
+                            <Drawer buttonTitle="GET">
+                              <GET containerId={container.id} />
+                            </Drawer>
+                          </span>
+                          <span className="mr-2">
+                            <Drawer buttonTitle="POST">
+                              <POST containerId={container.id} />
+                            </Drawer>
+                          </span>
+                        </div>
+                      )}
+                    <HandleContainerButton
+                      container={container}
+                      refetch={refetch}
+                    />
                   </TableCell>
                 </TableRow>
               );

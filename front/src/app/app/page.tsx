@@ -18,6 +18,7 @@ import { api } from "../../api/axios.ts";
 import { useToast } from "../../hooks/useToast.ts";
 import { ILlmResponse } from "../../interfaces/llm.ts";
 import React from "react";
+import WaveParticles from "../../components/WaveBackground/index.tsx";
 
 export default function App() {
   const [payload, setPayload] = useState(
@@ -65,38 +66,36 @@ export default function App() {
   );
 
   return (
-    <section className="flex flex-col w-full sm:flex-row p-3">
-      <div>
-        <Card className="w-full rounded-md h-fit">
-          <CardHeader className="px-5 py-4">
-            <CardTitle>
-              Generate your function
-            </CardTitle>
-            <CardDescription>
-              Describe the funcion you want to be generated and we handle the
-              complexity.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="px-5">
-            <Textarea
-              className="resize-none"
-              onChange={handleSetPayload}
-              value={payload}
-            />
-          </CardContent>
-          <CardFooter className="px-5">
-            <Button
-              loading={generateMutation.isPending}
-              onClick={() => generateMutation.mutate()}
-            >
-              Generate
-            </Button>
-          </CardFooter>
-        </Card>
-        <ContainerManagement />
-      </div>
+    <section className="grid grid-cols-5 grid-rows-4 gap-8 w-full sm:flex-row p-3 px-[10%]">
+      <WaveParticles />
+      <Card className="w-full h-full col-span-2 row-span-1">
+        <CardHeader className="px-5 py-4">
+          <CardTitle>
+            Generate your function
+          </CardTitle>
+          <CardDescription>
+            Describe the funcion you want to be generated and we handle the
+            complexity.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="px-5">
+          <Textarea
+            className="resize-none h-28"
+            onChange={handleSetPayload}
+            value={payload}
+          />
+        </CardContent>
+        <CardFooter className="px-5">
+          <Button
+            loading={generateMutation.isPending}
+            onClick={() => generateMutation.mutate()}
+          >
+            Generate
+          </Button>
+        </CardFooter>
+      </Card>
 
-      <Card className="rounded-md">
+      <Card className="col-span-3 row-span-5 h-fit">
         <CardHeader>
           <CardTitle>
             Your generated function
@@ -118,6 +117,10 @@ export default function App() {
           </Button>
         </CardFooter>
       </Card>
+
+      <div className="col-span-2 row-span-4">
+        <ContainerManagement />
+      </div>
     </section>
   );
 }

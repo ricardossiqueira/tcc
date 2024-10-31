@@ -1,7 +1,5 @@
 "use client";
 
-import { api } from "@/api/axios";
-import { loginFormSchema } from "@/zod/login";
 import { useRouter } from "next/navigation";
 import {
   createContext,
@@ -12,7 +10,10 @@ import {
   useState,
 } from "react";
 import { z } from "zod";
-import { useToast } from "./useToast";
+import { api } from "../api/axios.ts";
+import type { loginFormSchema } from "../zod/login.ts";
+import { useToast } from "./useToast.ts";
+import React from "react";
 
 const authUser = "/api/collections/users/auth-with-password";
 const authRefresh = "/api/collections/users/auth-refresh";
@@ -99,13 +100,15 @@ export const UserProvider = (
         router.push("/app");
         toast({
           title: "Login successful",
-          description: "Redirecting to app",
+          description: "Redirecting to app.",
+          variant: "success",
         });
       }).catch((err) => {
         setError(err.response.data as Error);
         toast({
           title: "Login failed",
           description: err.response.data.message,
+          variant: "destructive",
         });
       }).finally(() => {
         setIsLoading(false);
@@ -114,10 +117,20 @@ export const UserProvider = (
     [router, toast],
   );
 
+  const redirect = useCallback(() => {
+    if (user) router.push("/app");
+  }, [router, user]);
+
   const logout = useCallback(() => {
     localStorage.clear();
     setUser(null);
-  }, []);
+    toast({
+      title: "Logout successful",
+      description: "Redirecting to home.",
+      variant: "destructive",
+    });
+    router.push("/");
+  }, [router]);
 
   const refreshUser = useCallback(() => {
     setIsLoading(true);
@@ -147,7 +160,7 @@ export const UserProvider = (
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
-    (async () => {
+    (() => {
       if (storedUser && isLoading) {
         setUser(JSON.parse(storedUser));
         refreshUser();
@@ -168,10 +181,6 @@ export const UserProvider = (
 
     return () => removeEventListener("focus", onFocus);
   }, [refreshUser, isLoading]);
-
-  const redirect = useCallback(() => {
-    if (user) router.push("/app");
-  }, [router, user]);
 
   const userContextValue: UserContextType = {
     user,

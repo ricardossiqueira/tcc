@@ -1,12 +1,17 @@
 "use client";
 
-import { ModeToggle } from "./ThemeDropdown";
-import { Button } from "./ui/button";
+import React from "react";
+import { ModeToggle } from "./ThemeDropdown.tsx";
+import { Button } from "./ui/button.tsx";
+import useUser from "../hooks/useUser.tsx";
+import { LoginDialog } from "./LoginDialog/index.tsx";
 
 export function Header() {
+  const { logout, user } = useUser();
+
   return (
     <header
-      className="dark:bg-black bg-white border-b px-5 flex w-full items-center h-12 justify-between top-0 sticky z-10"
+      className="bg-black/30 backdrop-blur-sm px-[7%] flex w-full items-center h-16 justify-between top-0 sticky z-10"
       aria-label="Header"
     >
       <ul className="flex flex-row items-center">
@@ -19,7 +24,18 @@ export function Header() {
           </Button>
         </li>
       </ul>
-      <ModeToggle />
+      <div className="flex items-center">
+        <span className="mr-2">
+          <ModeToggle />
+        </span>
+        {user
+          ? (
+            <Button variant="ghost" onClick={() => logout()}>
+              Logout
+            </Button>
+          )
+          : <LoginDialog />}
+      </div>
     </header>
   );
 }

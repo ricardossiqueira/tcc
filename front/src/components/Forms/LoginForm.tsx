@@ -60,7 +60,9 @@ export default function LoginForm() {
             </FormItem>
           )}
         />
-        <Button type="submit" loading={isLoading}>Submit</Button>
+        <div className="flex w-full flex-row-reverse">
+          <Button type="submit" loading={isLoading}>Submit</Button>
+        </div>
       </form>
     </Form>
   );

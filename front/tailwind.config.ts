@@ -18,6 +18,7 @@ const config: Config = {
       },
       fontFamily: {
         "JetBrainsMono": ["JetBrains Mono", "serif"],
+        "SpaceMono": ["Space Mono", "serif"],
       },
       colors: {
         background: "hsl(var(--background))",
@@ -65,6 +66,15 @@ const config: Config = {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      animation: {
+        "terminal-blink": "terminal-blink 0.8s steps(1) infinite",
+      },
+      keyframes: {
+        "terminal-blink": {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0" },
+        },
       },
     },
   },
