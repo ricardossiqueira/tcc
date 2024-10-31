@@ -1,7 +1,6 @@
 package main
 
 import (
-	"back/cronjobs"
 	"back/docker"
 	"back/llm"
 	"back/middlewares"
@@ -43,7 +42,7 @@ func main() {
 
 	cn := services.NewContainer(app, dockerCtx, dockerCli)
 
-	app.OnBeforeServe().Add(cronjobs.ContainerCleaner(app, cn))
+	// app.OnBeforeServe().Add(cronjobs.ContainerCleaner(app, cn))
 	app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
 		e.Router.GET("/*", apis.StaticDirectoryHandler(os.DirFS("./pb_public"), false))
 
@@ -82,7 +81,9 @@ func main() {
 
 		e.Router.POST("/docker/containers/:id/start", cn.StartContainer, middlewares.RequireContainerOwnership(app))
 
-		e.Router.POST("/docker/containers/:id/post", cn.PostToContainer, apis.RequireAdminOrRecordAuth())
+		e.Router.POST("/docker/containers/:id", cn.ContainerPOST)
+
+		e.Router.GET("/docker/containers/:id", cn.ContainerGET)
 
 		e.Router.POST("/llm/chat", func(c echo.Context) error {
 			body := types.ChatDTO{}

@@ -6,6 +6,7 @@ import (
 	"back/utils"
 	"bytes"
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -164,10 +165,28 @@ func (cn Container) StartContainer(c echo.Context) error {
 	return c.JSON(http.StatusOK, nil)
 }
 
-// TODO: Use lookup table to listen to the right port
-func (cn Container) PostToContainer(c echo.Context) error {
+func (cn Container) ContainerPOST(c echo.Context) error {
 	data := apis.RequestInfo(c).Data
-	status, value := Proxy("http://localhost:5000", data)
+	containerId := c.PathParam("id")
+
+	container, err := cn.GetContainerById(containerId)
+	if err != nil {
+		return apis.NewBadRequestError(err.Error(), nil)
+	}
+
+	status, value := ProxyPOST(fmt.Sprintf("http://localhost:%s", container.Port), data)
+	return c.JSON(status, value)
+}
+
+func (cn Container) ContainerGET(c echo.Context) error {
+	containerId := c.PathParam("id")
+
+	container, err := cn.GetContainerById(containerId)
+	if err != nil {
+		return apis.NewBadRequestError(err.Error(), nil)
+	}
+
+	status, value := ProxyGET(fmt.Sprintf("http://localhost:%s", container.Port))
 	return c.JSON(status, value)
 }
 

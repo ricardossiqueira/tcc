@@ -29,29 +29,28 @@ func logContainerCleanerError(app *pocketbase.PocketBase, err error, containerId
 	)
 }
 
-func cleanContainer(app *pocketbase.PocketBase, cn *services.Container, container types.ContainerDTO) {
-	if err := cn.DockerCli.ContainerStop(cn.DockerCtx, container.Id, dockerContainer.StopOptions{}); err != nil {
-		logContainerCleanerError(app, err, container.Id)
+func cleanContainer(app *pocketbase.PocketBase, cn *services.Container, c types.ContainerDTO) {
+	if err := cn.DockerCli.ContainerStop(cn.DockerCtx, c.DockerId, dockerContainer.StopOptions{}); err != nil {
+		logContainerCleanerError(app, err, c.Id)
+		return
 	}
-	if err := cn.DockerCli.ContainerRemove(cn.DockerCtx, container.Id, dockerContainer.RemoveOptions{}); err != nil {
-		logContainerCleanerError(app, err, container.Id)
-	}
-
-	container, err := cn.GetContainerById(container.Id)
-	if err != nil {
-		logContainerCleanerError(app, err, container.Id)
+	if err := cn.DockerCli.ContainerRemove(cn.DockerCtx, c.DockerId, dockerContainer.RemoveOptions{}); err != nil {
+		logContainerCleanerError(app, err, c.Id)
+		return
 	}
 
-	record, err := app.Dao().FindRecordById("containers", container.Id)
+	record, err := app.Dao().FindRecordById("containers", c.Id)
 	if err != nil {
-		logContainerCleanerError(app, err, container.Id)
+		logContainerCleanerError(app, err, c.Id)
+		return
 	}
 
 	record.Set("status", "Stopped")
 	record.Set("port", 0)
 
 	if err := app.Dao().SaveRecord(record); err != nil {
-		logContainerCleanerError(app, err, container.Id)
+		logContainerCleanerError(app, err, c.Id)
+		return
 	}
 }
 
