@@ -4,9 +4,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import useUser from "../../hooks/useUser.tsx";
-import { loginFormSchema } from "../../zod/login.ts";
-import { Button } from "../ui/button.tsx";
+import useUser from "../../hooks/useUser";
+import { loginFormSchema } from "../../zod/login";
+import { Button } from "../ui/button";
 import {
   Form,
   FormControl,
@@ -14,8 +14,8 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "../ui/form.tsx";
-import { Input } from "../ui/input.tsx";
+} from "../ui/form";
+import { Input } from "../ui/input";
 
 export default function LoginForm() {
   const { fetchUser, isLoading } = useUser();

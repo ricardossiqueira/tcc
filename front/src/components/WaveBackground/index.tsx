@@ -1,144 +1,6 @@
-// "use client";
-
-// import React, { useEffect, useRef } from "react";
-// import * as THREE from "three";
-
-// const SEPARATION = 100;
-// const AMOUNTX = 160;
-// const AMOUNTY = 80;
-// const WAVE_SPEED = 0.0125; // Macro to control wave speed
-
-// const WaveParticles: React.FC = () => {
-//   const containerRef = useRef<HTMLDivElement>(null);
-//   const countRef = useRef(0);
-
-//   useEffect(() => {
-//     const container = containerRef.current;
-//     if (!container) return;
-
-//     // Set up camera with an isometric perspective
-//     const camera = new THREE.PerspectiveCamera(
-//       75,
-//       globalThis.innerWidth / globalThis.innerHeight,
-//       1,
-//       10000,
-//     );
-//     camera.position.set(0, 600, 1200); // Move camera to an isometric angle
-//     camera.lookAt(0, 0, 0); // Center the camera on the origin
-
-//     const scene = new THREE.Scene();
-//     scene.background = new THREE.Color(0x000000); // Set background to black for dark theme
-
-//     // Particle grid setup
-//     const numParticles = AMOUNTX * AMOUNTY;
-//     const positions = new Float32Array(numParticles * 3);
-
-//     let i = 0;
-//     for (let ix = 0; ix < AMOUNTX; ix++) {
-//       for (let iy = 0; iy < AMOUNTY; iy++) {
-//         positions[i] = ix * SEPARATION - (AMOUNTX * SEPARATION) / 2;
-//         positions[i + 1] = 0;
-//         positions[i + 2] = iy * SEPARATION - (AMOUNTY * SEPARATION) / 2;
-//         i += 3;
-//       }
-//     }
-
-//     const geometry = new THREE.BufferGeometry();
-//     geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-
-//     const material = new THREE.ShaderMaterial({
-//       uniforms: {
-//         color1: { value: new THREE.Color(0x333333) },
-//         color2: { value: new THREE.Color(0x999999) },
-//       },
-//       vertexShader: `
-//         varying float vYPosition;
-
-//         void main() {
-//           vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-//           gl_PointSize = 4.0; // Set a fixed point size for the particles
-//           vYPosition = position.y; // Pass y position to fragment shader
-//           gl_Position = projectionMatrix * mvPosition;
-//         }
-//       `,
-//       fragmentShader: `
-//         uniform vec3 color1;
-//         uniform vec3 color2;
-//         varying float vYPosition;
-
-//         void main() {
-//           // Define gradient based on the y position of each particle
-//           float gradientFactor = smoothstep(-250.0, 250.0, vYPosition);
-//           vec3 gradientColor = mix(color1, color2, gradientFactor);
-
-//           if (length(gl_PointCoord - vec2(0.5, 0.5)) > 0.475) discard;
-//           gl_FragColor = vec4(gradientColor, 1.0);
-//         }
-//       `,
-//     });
-
-//     const particles = new THREE.Points(geometry, material);
-//     scene.add(particles);
-
-//     const renderer = new THREE.WebGLRenderer({ antialias: true });
-//     renderer.setPixelRatio(globalThis.devicePixelRatio);
-//     renderer.setSize(globalThis.innerWidth, globalThis.innerHeight);
-//     container.appendChild(renderer.domElement);
-
-//     const onWindowResize = () => {
-//       camera.aspect = globalThis.innerWidth / globalThis.innerHeight;
-//       camera.updateProjectionMatrix();
-//       renderer.setSize(globalThis.innerWidth, globalThis.innerHeight);
-//     };
-
-//     globalThis.addEventListener("resize", onWindowResize);
-
-//     const animate = () => {
-//       requestAnimationFrame(animate);
-//       render();
-//     };
-
-//     const render = () => {
-//       const positions = particles.geometry.attributes.position
-//         .array as Float32Array;
-//       let i = 0;
-
-//       for (let ix = 0; ix < AMOUNTX; ix++) {
-//         for (let iy = 0; iy < AMOUNTY; iy++) {
-//           positions[i + 1] = (Math.sin((ix + countRef.current) * 0.3) * 50) +
-//             (Math.sin((iy + countRef.current) * 0.5) * 50);
-//           i += 3;
-//         }
-//       }
-
-//       particles.geometry.attributes.position.needsUpdate = true;
-
-//       renderer.render(scene, camera);
-//       countRef.current += WAVE_SPEED; // Use WAVE_SPEED macro to control wave speed
-//     };
-
-//     animate();
-
-//     return () => {
-//       globalThis.removeEventListener("resize", onWindowResize);
-//       renderer.dispose();
-//     };
-//   }, []);
-
-//   return (
-//     <div
-//       ref={containerRef}
-//       style={{ touchAction: "none" }}
-//       className="fixed inset-0 w-full h-full -z-10"
-//     />
-//   );
-// };
-
-// export default WaveParticles;
-
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 
 const SEPARATION = 100;
@@ -149,25 +11,64 @@ const WAVE_SPEED = 0.0125;
 const GLITCH_DURATION = 120; // Duration of glitch effect in milliseconds
 const GLITCH_INTENSITY = 0.4; // Intensity of the chromatic shift
 
-const WaveParticles: React.FC = () => {
+interface WaveParticlesProps {
+  rotation?: { x: number; y: number; z: number }; // Rotation parameter
+}
+
+const WaveParticles: React.FC<WaveParticlesProps> = ({ rotation = { x: 0, y: 0, z: 0 } }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
+  const particlesRef = useRef<THREE.Points | null>(null);
   const countRef = useRef(0);
   const chromaticShiftRef = useRef(false);
   const shiftStartRef = useRef(0);
   const distortions = useRef(new Float32Array(AMOUNTX * AMOUNTY));
 
+  const [windowSize, setWindowSize] = useState({
+    width: window.innerWidth,
+    height: window.innerHeight,
+  });
+
+  // Update window dimensions state on resize
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
+    // Clean up previous renderer if it exists
+    if (rendererRef.current) {
+      rendererRef.current.dispose();
+      if (rendererRef.current.domElement.parentNode === container) {
+        container.removeChild(rendererRef.current.domElement);
+      }
+    }
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(windowSize.width, windowSize.height);
+    container.appendChild(renderer.domElement);
+    rendererRef.current = renderer;
+
     const camera = new THREE.PerspectiveCamera(
       75,
-      globalThis.innerWidth / globalThis.innerHeight,
+      windowSize.width / windowSize.height,
       1,
-      10000,
+      10000
     );
     camera.position.set(0, 600, 1200);
     camera.lookAt(0, 0, 0);
+    cameraRef.current = camera;
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000000);
@@ -194,10 +95,7 @@ const WaveParticles: React.FC = () => {
 
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute(
-      "colorOffset",
-      new THREE.BufferAttribute(colorOffsets, 3),
-    );
+    geometry.setAttribute("colorOffset", new THREE.BufferAttribute(colorOffsets, 3));
 
     const material = new THREE.ShaderMaterial({
       uniforms: {
@@ -242,20 +140,9 @@ const WaveParticles: React.FC = () => {
     });
 
     const particles = new THREE.Points(geometry, material);
+    particles.rotation.set(rotation.x, rotation.y, rotation.z); // Apply initial rotation
     scene.add(particles);
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setPixelRatio(globalThis.devicePixelRatio);
-    renderer.setSize(globalThis.innerWidth, globalThis.innerHeight);
-    container.appendChild(renderer.domElement);
-
-    const onWindowResize = () => {
-      camera.aspect = globalThis.innerWidth / globalThis.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(globalThis.innerWidth, globalThis.innerHeight);
-    };
-
-    globalThis.addEventListener("resize", onWindowResize);
+    particlesRef.current = particles;
 
     const onClick = () => {
       chromaticShiftRef.current = true;
@@ -264,17 +151,17 @@ const WaveParticles: React.FC = () => {
         Math.random() * 30 - 15
       );
     };
-    globalThis.addEventListener("click", onClick);
+    window.addEventListener("click", onClick);
 
+    let animationId: number;
     const animate = () => {
-      requestAnimationFrame(animate);
+      animationId = requestAnimationFrame(animate);
       render();
     };
 
     const render = () => {
       const elapsedTime = performance.now() - shiftStartRef.current;
-      const positions = particles.geometry.attributes.position
-        .array as Float32Array;
+      const positions = particles.geometry.attributes.position.array as Float32Array;
 
       let i = 0;
       for (let ix = 0; ix < AMOUNTX; ix++) {
@@ -309,11 +196,14 @@ const WaveParticles: React.FC = () => {
     animate();
 
     return () => {
-      globalThis.removeEventListener("resize", onWindowResize);
-      globalThis.removeEventListener("click", onClick);
+      window.removeEventListener("click", onClick);
+      cancelAnimationFrame(animationId); // Stop previous animation loop
       renderer.dispose();
+      if (renderer.domElement.parentNode === container) {
+        container.removeChild(renderer.domElement);
+      }
     };
-  }, []);
+  }, [rotation, windowSize]); // Re-run effect when window size changes
 
   return (
     <div

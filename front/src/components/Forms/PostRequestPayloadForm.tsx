@@ -1,21 +1,21 @@
 import React, { useState } from "react";
 
-import { Input } from "../../components/ui/input.tsx";
+import { Input } from "../../components/ui/input";
 import { PlusIcon, TrashIcon } from "@radix-ui/react-icons";
-import { Button } from "../../components/ui/button.tsx";
+import { Button } from "../../components/ui/button";
 import { useFieldArray } from "react-hook-form";
 import {
   basePayload,
   type PostRequestPayloadSchema,
   postRequestPayloadSchema,
   useZodForm,
-} from "../../zod/postRequestPayload.ts";
+} from "../../zod/postRequestPayload";
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
-} from "../../components/ui/form.tsx";
+} from "../../components/ui/form";
 import { z } from "zod";
 
 export default function PostRequestPayloadForm() {

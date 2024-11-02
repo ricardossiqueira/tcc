@@ -1,13 +1,13 @@
 import React from "react";
-import { Button } from "../ui/button.tsx";
+import { Button } from "../ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "../ui/dialog.tsx";
-import LoginForm from "../Forms/LoginForm.tsx";
+} from "../ui/dialog";
+import LoginForm from "../Forms/LoginForm";
 
 export function LoginDialog() {
   return (

@@ -4,7 +4,7 @@ export default function Hero() {
   return (
     <div className="flex flex-col justify-center items-center mt-[5%]">
       <div className="text-center">
-        <h1 className="text-4xl md:text-5xl font-bold mb-4 font-JetBrainsMono">
+        <h1 className="text-4xl md:text-5xl font-bold mb-4 font-JetBrainsMono ">
           Create Intelligent Python Functions
         </h1>
 
@@ -13,7 +13,7 @@ export default function Hero() {
           platforms.
         </p>
 
-        <button className="px-6 py-3 text-white font-semibold rounded-lg hover:bg-blue-500 transition duration-300">
+        <button className="px-6 py-3 text-white font-semibold border hover:border-transparent rounded-md transition duration-300 hover:text-shadow-neon-text">
           Try it out!
         </button>
       </div>

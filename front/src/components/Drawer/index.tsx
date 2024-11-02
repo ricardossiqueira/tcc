@@ -4,9 +4,9 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from "../../components/ui/drawer.tsx";
+} from "../../components/ui/drawer";
 import React from "react";
-import { Button } from "../ui/button.tsx";
+import { Button } from "../ui/button";
 
 export default function Drawer(
   props: { buttonTitle: string; children: React.ReactNode },

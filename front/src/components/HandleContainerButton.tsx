@@ -2,8 +2,8 @@
 
 import { useMutation } from "@tanstack/react-query";
 import React from "react";
-import { api } from "../api/axios.ts";
-import { Button } from "./ui/button.tsx";
+import { api } from "../api/axios";
+import { Button } from "./ui/button";
 
 interface IContainer {
   id: string;

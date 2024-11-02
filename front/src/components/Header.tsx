@@ -1,10 +1,10 @@
 "use client";
 
 import React from "react";
-import { ModeToggle } from "./ThemeDropdown.tsx";
-import { Button } from "./ui/button.tsx";
-import useUser from "../hooks/useUser.tsx";
-import { LoginDialog } from "./LoginDialog/index.tsx";
+import { ModeToggle } from "./ThemeDropdown";
+import { Button } from "./ui/button";
+import useUser from "../hooks/useUser";
+import { LoginDialog } from "./LoginDialog/index";
 
 export function Header() {
   const { logout, user } = useUser();

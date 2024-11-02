@@ -8,7 +8,7 @@ export default function CodeEditor(props: EditorProps) {
   return (
     <Editor
       theme="vs-dark"
-      height="auto"
+      height="60vh"
       language="python"
       options={{
         lineNumbers: "off",

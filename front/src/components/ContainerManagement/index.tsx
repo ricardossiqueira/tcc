@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card.tsx";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import {
   Table,
   TableBody,
@@ -9,15 +9,15 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../ui/table.tsx";
-import { Button } from "../ui/button.tsx";
+} from "../ui/table";
+import { Button } from "../ui/button";
 import { ReloadIcon } from "@radix-ui/react-icons";
-import { api } from "../../api/axios.ts";
+import { api } from "../../api/axios";
 import React from "react";
-import Drawer from "../../components/Drawer/index.tsx";
-import { HandleContainerButton } from "../HandleContainerButton.tsx";
-import { GET } from "../Drawer/GET.tsx";
-import { POST } from "../Drawer/POST.tsx";
+import Drawer from "../../components/Drawer/index";
+import { HandleContainerButton } from "../HandleContainerButton";
+import { GET } from "../Drawer/GET";
+import { POST } from "../Drawer/POST";
 
 export function ContainerManagement() {
   async function getUserContainers() {
@@ -40,7 +40,7 @@ export function ContainerManagement() {
   }
 
   return (
-    <Card className="h-full">
+    <Card className="h-fit max-h-[50%]">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           Your Containers

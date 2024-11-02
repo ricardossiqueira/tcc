@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { api } from "../../api/axios.ts";
+import { api } from "../../api/axios";
 
 interface IPOSTProps {
   containerId: string;

@@ -21,7 +21,9 @@ export default function Home() {
         </CardContent>
       </Card> */
       }
-      <WaveBackground />
+
+
+      <WaveBackground rotation={{ x: 0, y: 3, z: 100 }} />
     </section>
   );
 }
