@@ -5,7 +5,7 @@ import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import useUser from "../../hooks/useUser";
-import { loginFormSchema } from "../../zod/auth";
+import { registerFormSchema } from "../../zod/auth";
 import { Button } from "../ui/button";
 import {
   Form,
@@ -17,15 +17,15 @@ import {
 } from "../ui/form";
 import { Input } from "../ui/input";
 
-export default function LoginForm() {
-  const { fetchUser, isLoading } = useUser();
+export default function RegisterForm() {
+  const { registerUser, isLoading } = useUser();
 
-  const form = useForm<z.infer<typeof loginFormSchema>>({
-    resolver: zodResolver(loginFormSchema),
+  const form = useForm<z.infer<typeof registerFormSchema>>({
+    resolver: zodResolver(registerFormSchema),
   });
 
-  function onSubmit(values: z.infer<typeof loginFormSchema>) {
-    fetchUser(values);
+  function onSubmit(values: z.infer<typeof registerFormSchema>) {
+    registerUser(values);
   }
 
   return (
@@ -36,12 +36,25 @@ export default function LoginForm() {
       >
         <FormField
           control={form.control}
-          name="identity"
+          name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Username</FormLabel>
+              <FormLabel>Name</FormLabel>
               <FormControl>
-                <Input placeholder="Email" {...field} />
+                <Input placeholder="Name" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input placeholder="Name" type="email" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -55,6 +68,19 @@ export default function LoginForm() {
               <FormLabel>Password</FormLabel>
               <FormControl>
                 <Input placeholder="Password" type="password" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="passwordConfirm"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Password Confirm</FormLabel>
+              <FormControl>
+                <Input placeholder="Password confirm" type="password" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

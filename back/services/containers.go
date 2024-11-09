@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	dockerTypes "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
@@ -34,11 +35,18 @@ func NewContainer(app *pocketbase.PocketBase, dockerCtx context.Context, dockerC
 	}
 }
 
-func (cn Container) GetContainerById(containerId string) (types.ContainerDTO, error) {
-	container := types.ContainerDTO{}
-	err := cn.app.Dao().DB().Select("*").
-		From("containers").
-		Where(dbx.NewExp("id = {:id}", dbx.Params{"id": containerId})).
+func (cn Container) GetContainerById(containerId string) (types.ContainerDetailsDTO, error) {
+	container := types.ContainerDetailsDTO{}
+
+	err := cn.
+		app.
+		Dao().
+		DB().
+		NewQuery(
+			fmt.Sprintf(
+				"SELECT containers.*, scripts.id AS script_id, scripts.*, containers.id AS id  FROM containers JOIN scripts ON scripts.id == containers.script WHERE containers.id = '%s'", containerId,
+			),
+		).
 		One(&container)
 	if err != nil {
 		return container, err
@@ -46,6 +54,32 @@ func (cn Container) GetContainerById(containerId string) (types.ContainerDTO, er
 	return container, nil
 }
 
+// * Create container stats
+func (cn Container) CreateStats(payload types.CreateContainerStatsDTO) error {
+	collection, err := cn.app.Dao().FindCollectionByNameOrId("container_stats")
+	if err != nil {
+		return err
+	}
+
+	record := models.NewRecord(collection)
+	form := forms.NewRecordUpsert(cn.app, record)
+	form.LoadData(map[string]any{
+		"container":      payload.Container,
+		"start_duration": payload.StartDuration,
+		"stop_duration":  payload.StopDuration,
+		"method":         payload.Method,
+	})
+
+	if err := form.Submit(); err != nil {
+		return err
+	}
+
+	cn.app.Logger().Info(fmt.Sprintf("Container stats created for container %s", payload.Container))
+
+	return nil
+}
+
+// * List all containers
 func (cn Container) List(c echo.Context) error {
 
 	containers := []types.ContainerListDTO{}
@@ -61,6 +95,7 @@ func (cn Container) List(c echo.Context) error {
 	return c.JSON(http.StatusOK, containers)
 }
 
+// * List containers by status
 func (cn Container) ListByStatus(c echo.Context) error {
 	status := c.PathParam("status")
 	var containers_list []types.ContainerStatusDTO
@@ -79,8 +114,10 @@ func (cn Container) ListByStatus(c echo.Context) error {
 	return c.JSON(http.StatusOK, containers_list)
 }
 
+// * Stop a container
 func (cn Container) StopContainer(c echo.Context) error {
 	containerId := c.PathParam("id")
+	started_at := time.Now().UnixMilli()
 
 	container, err := cn.GetContainerById(containerId)
 	if err != nil {
@@ -93,7 +130,7 @@ func (cn Container) StopContainer(c echo.Context) error {
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
-	record, err := cn.app.Dao().FindRecordById("containers", container.Id)
+	record, err := cn.app.Dao().FindRecordById("containers", containerId)
 	if err != nil {
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
@@ -105,11 +142,18 @@ func (cn Container) StopContainer(c echo.Context) error {
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
+	duration := time.Now().UnixMilli() - started_at
+	if err := cn.CreateStats(types.CreateContainerStatsDTO{Container: containerId, StopDuration: duration}); err != nil {
+		cn.app.Logger().Error(err.Error())
+	}
+
 	return c.JSON(http.StatusOK, nil)
 }
 
+// * Start a container
 func (cn Container) StartContainer(c echo.Context) error {
 	containerId := c.PathParam("id")
+	started_at := time.Now().UnixMilli()
 
 	container, err := cn.GetContainerById(containerId)
 	if err != nil {
@@ -119,7 +163,7 @@ func (cn Container) StartContainer(c echo.Context) error {
 	script := types.ScriptDTO{}
 	err = cn.app.Dao().DB().Select("*").
 		From("scripts").
-		Where(dbx.NewExp("id = {:id}", dbx.Params{"id": container.Script})).
+		Where(dbx.NewExp("id = {:id}", dbx.Params{"id": container.ScriptId})).
 		One(&script)
 	if err != nil {
 		return apis.NewBadRequestError(err.Error(), nil)
@@ -160,6 +204,11 @@ func (cn Container) StartContainer(c echo.Context) error {
 
 	if err := cn.DockerCli.ContainerStart(cn.DockerCtx, resp.ID, dockerTypes.StartOptions{}); err != nil {
 		return apis.NewBadRequestError(err.Error(), nil)
+	}
+
+	duration := time.Now().UnixMilli() - started_at
+	if err := cn.CreateStats(types.CreateContainerStatsDTO{Container: containerId, StartDuration: duration}); err != nil {
+		cn.app.Logger().Error(err.Error())
 	}
 
 	return c.JSON(http.StatusOK, nil)
@@ -211,6 +260,7 @@ func (cn Container) Create(c echo.Context) error {
 		"script":  data.Payload.Choices[0].Message.Content,
 		"payload": data.Payload,
 		"owner":   user.Id,
+		"prompt":  data.Prompt,
 	})
 
 	if err := form.Submit(); err != nil {
@@ -218,4 +268,15 @@ func (cn Container) Create(c echo.Context) error {
 	}
 
 	return nil
+}
+
+func (cn Container) Details(c echo.Context) error {
+	containerId := c.PathParam("id")
+
+	container, err := cn.GetContainerById(containerId)
+	if err != nil {
+		return apis.NewBadRequestError(err.Error(), nil)
+	}
+
+	return c.JSON(http.StatusOK, container)
 }

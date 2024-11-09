@@ -26,6 +26,7 @@ import (
 
 	dockerTypes "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/namesgenerator"
 )
 
 func main() {
@@ -44,8 +45,10 @@ func main() {
 
 	// app.OnBeforeServe().Add(cronjobs.ContainerCleaner(app, cn))
 	app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
+
 		e.Router.GET("/*", apis.StaticDirectoryHandler(os.DirFS("./pb_public"), false))
 
+		//? SSE test endpoint
 		e.Router.GET("/api/sse", func(c echo.Context) error {
 			w := c.Response()
 			w.Header().Set("Content-Type", "text/event-stream")
@@ -71,20 +74,28 @@ func main() {
 			}
 		})
 
+		//* Create a new container
 		e.Router.POST("/docker/containers/new", cn.Create)
 
+		//* List all user containers
 		e.Router.GET("/docker/containers/list", cn.List, apis.RequireRecordAuth())
 
+		//* List containers by status
 		e.Router.GET("/docker/containers/:status", cn.ListByStatus, apis.RequireRecordAuth())
 
+		//* Delete a container
 		e.Router.POST("/docker/containers/:id/stop", cn.StopContainer, middlewares.RequireContainerOwnership(app))
 
+		//* Start a container
 		e.Router.POST("/docker/containers/:id/start", cn.StartContainer, middlewares.RequireContainerOwnership(app))
 
+		//* POST to a container
 		e.Router.POST("/docker/containers/:id", cn.ContainerPOST)
 
+		//* GET from a container
 		e.Router.GET("/docker/containers/:id", cn.ContainerGET)
 
+		//* Post to the llm chatbot
 		e.Router.POST("/llm/chat", func(c echo.Context) error {
 			body := types.ChatDTO{}
 			if err := c.Bind(&body); err != nil {
@@ -103,67 +114,77 @@ func main() {
 			return c.JSON(http.StatusOK, chatCompletion)
 		}, apis.LoadAuthContext(app))
 
+		//DONE: Get container details by id (script, propmpt and status)
+		e.Router.GET("/docker/containers/:id/details", cn.Details, middlewares.RequireContainerOwnership(app))
+
+		//DONE: Get statistics from container (avg start time, avg stop time, # of requests and type of requests)
+		e.Router.GET("/docker/containers/:id/stats", cn.Stats, middlewares.RequireContainerOwnership(app))
+		e.Router.GET("/docker/containers/:id/computed-stats", cn.ComputedStats, middlewares.RequireContainerOwnership(app))
+
+		//TODO: Listen to container logs
+		e.Router.GET("/docker/containers/:id/logs", func(c echo.Context) error { return nil }, middlewares.RequireContainerOwnership(app))
+
+		//TODO: Add human readable id and short description to containers
 		return nil
 	})
 
-	app.OnModelAfterCreate().Add(func(e *core.ModelEvent) error {
-		if e.Model.TableName() == "scripts" {
-			script := types.ScriptDTO{}
+	app.OnModelAfterCreate("scripts").Add(func(e *core.ModelEvent) error {
+		script := types.ScriptDTO{}
 
-			//GET script
-			app.Dao().DB().
-				Select("*").
-				From("scripts").
-				Where(dbx.NewExp("id = {:id}", dbx.Params{"id": e.Model.GetId()})).
-				One(&script)
+		//GET script
+		app.Dao().DB().
+			Select("*").
+			From("scripts").
+			Where(dbx.NewExp("id = {:id}", dbx.Params{"id": e.Model.GetId()})).
+			One(&script)
 
-			//Parse script to .tar
-			var tar bytes.Buffer
-			if err := utils.ScriptToTar(&tar, script.Script); err != nil {
-				app.Logger().Error(err.Error())
-				return err
-			}
+		//Parse script to .tar
+		var tar bytes.Buffer
+		if err := utils.ScriptToTar(&tar, script.Script); err != nil {
+			app.Logger().Error(err.Error())
+			return err
+		}
 
-			port, err := services.AllocatePort()
-			if err != nil {
-				app.Logger().Error(err.Error())
-				return err
-			}
+		port, err := services.AllocatePort()
+		if err != nil {
+			app.Logger().Error(err.Error())
+			return err
+		}
 
-			resp, err := docker.CreateContainer(app, dockerCli, dockerCtx, tar, port)
-			if err != nil {
-				app.Logger().Error(err.Error())
-				return err
-			}
+		resp, err := docker.CreateContainer(app, dockerCli, dockerCtx, tar, port)
+		if err != nil {
+			app.Logger().Error(err.Error())
+			return err
+		}
 
-			//Create container
-			collection, err := app.Dao().FindCollectionByNameOrId("containers")
-			if err != nil {
-				app.Logger().Error(err.Error())
-				return err
-			}
+		//Create container
+		collection, err := app.Dao().FindCollectionByNameOrId("containers")
+		if err != nil {
+			app.Logger().Error(err.Error())
+			return err
+		}
 
-			record := models.NewRecord(collection)
-			form := forms.NewRecordUpsert(app, record)
+		record := models.NewRecord(collection)
+		form := forms.NewRecordUpsert(app, record)
 
-			form.LoadData(map[string]any{
-				"docker_id": resp.ID,
-				"status":    "Up",
-				"image":     docker.GetImage(),
-				"script":    script.Id,
-				"port":      port,
-				"owner":     script.Owner,
-			})
+		form.LoadData(map[string]any{
+			"docker_id": resp.ID,
+			"status":    "Up",
+			"image":     docker.GetImage(),
+			"script":    script.Id,
+			"port":      port,
+			"owner":     script.Owner,
+			"name":      namesgenerator.GetRandomName(0),
+		})
 
-			if err := form.Submit(); err != nil {
-				app.Logger().Error(err.Error())
-				return err
-			}
+		if err := form.Submit(); err != nil {
+			app.Logger().Error(err.Error())
+			return err
+		}
 
-			if err := dockerCli.ContainerStart(dockerCtx, resp.ID, dockerTypes.StartOptions{}); err != nil {
-				app.Logger().Error(err.Error())
-				return err
-			}
+		if err := dockerCli.ContainerStart(dockerCtx, resp.ID, dockerTypes.StartOptions{}); err != nil {
+			app.Logger().Error(err.Error())
+			return err
 		}
 
 		return nil

@@ -13,7 +13,7 @@ export default function Hero() {
           platforms.
         </p>
 
-        <button className="px-6 py-3 text-white font-semibold border hover:border-transparent rounded-md transition duration-300 hover:text-shadow-neon-text">
+        <button className="px-6 py-3 text-white font-semibold rounded-md transition duration-300 hover:text-shadow-neon-text">
           Try it out!
         </button>
       </div>

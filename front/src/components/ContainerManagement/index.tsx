@@ -12,18 +12,16 @@ import {
 } from "../ui/table";
 import { Button } from "../ui/button";
 import { ReloadIcon } from "@radix-ui/react-icons";
-import { api } from "../../api/axios";
-import React from "react";
-import Drawer from "../../components/Drawer/index";
-import { HandleContainerButton } from "../HandleContainerButton";
-import { GET } from "../Drawer/GET";
-import { POST } from "../Drawer/POST";
+import React, { useState } from "react";
+import { getUserContainers } from "../../api/containers";
+
+
 
 export function ContainerManagement() {
-  async function getUserContainers() {
-    const res = await api.get("/docker/containers/list");
-    return res;
-  }
+
+
+
+  const [selected, setSelected] = useState("");
 
   const { data: containers, refetch } = useQuery({
     refetchOnWindowFocus: true,
@@ -32,12 +30,6 @@ export function ContainerManagement() {
     refetchInterval: 5000,
   });
 
-  interface IContainer {
-    id: string;
-    generated_script: string;
-    status: string;
-    image: string;
-  }
 
   return (
     <Card className="h-fit max-h-[50%]">
@@ -64,37 +56,15 @@ export function ContainerManagement() {
               <TableHead>ID</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Image</TableHead>
-              <TableHead className="text-right">Options</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {containers?.data.map((container: IContainer) => {
+            {containers?.data.map((container) => {
               return (
-                <TableRow key={container.id}>
+                <TableRow key={container.id} onClick={() => { setSelected(container.id) }} className={`cursor-pointer ${selected === container.id && "bg-yellow-500 hover:bg-yellow-400 text-black"}`} >
                   <TableCell className="font-medium">{container.id}</TableCell>
                   <TableCell>{container.status ?? "N/A"}</TableCell>
                   <TableCell>{container.image ?? "N/A"}</TableCell>
-                  <TableCell className="text-right flex justify-end">
-                    {container.status === "Up" &&
-                      (
-                        <div>
-                          <span className="mr-2">
-                            <Drawer buttonTitle="GET">
-                              <GET containerId={container.id} />
-                            </Drawer>
-                          </span>
-                          <span className="mr-2">
-                            <Drawer buttonTitle="POST">
-                              <POST containerId={container.id} />
-                            </Drawer>
-                          </span>
-                        </div>
-                      )}
-                    <HandleContainerButton
-                      container={container}
-                      refetch={refetch}
-                    />
-                  </TableCell>
                 </TableRow>
               );
             })}

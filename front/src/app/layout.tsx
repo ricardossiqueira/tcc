@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import React from "react";
-import { Header } from "../components/Header";
 import { Toaster } from "../components/ui/toaster";
 import { UserProvider } from "../hooks/useUser";
 import ReactQueryProvider from "../utils/providers/ReactQueryProvider";
 import { ThemeProvider } from "../utils/providers/ThemeProvider";
+import { SidebarProvider } from "../components/ui/sidebar";
+import { AppSidebar } from "../components/Sidebar";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -30,10 +31,12 @@ export default function RootLayout({
         >
           <ReactQueryProvider>
             <UserProvider>
-              <Header />
-              <main>
-                {children}
-              </main>
+              <SidebarProvider defaultOpen={false}>
+                <AppSidebar />
+                <main className="container mx-auto">
+                  {children}
+                </main>
+              </SidebarProvider>
               <Toaster />
             </UserProvider>
           </ReactQueryProvider>

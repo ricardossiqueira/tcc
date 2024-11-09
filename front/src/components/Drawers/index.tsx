@@ -4,17 +4,21 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from "../../components/ui/drawer";
+} from "../ui/drawer";
 import React from "react";
-import { Button } from "../ui/button";
+
+export interface IDrawerProps {
+  children: React.ReactNode;
+  content: React.ReactNode;
+}
 
 export default function Drawer(
-  props: { buttonTitle: string; children: React.ReactNode },
+  props: IDrawerProps,
 ) {
   return (
     <DrawerUI>
-      <DrawerTrigger asChild>
-        <Button variant="outline">{props.buttonTitle}</Button>
+      <DrawerTrigger asChild >
+        {props.children}
       </DrawerTrigger>
       <DrawerContent>
         <div className="p-3 w-full">
@@ -22,7 +26,7 @@ export default function Drawer(
             <DrawerTitle>Terminal</DrawerTitle>
           </DrawerHeader>
           <div className="w-full h-60">
-            {props.children}
+            {props.content}
           </div>
         </div>
       </DrawerContent>

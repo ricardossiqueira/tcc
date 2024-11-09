@@ -10,14 +10,15 @@ import {
   useState,
 } from "react";
 import { z } from "zod";
-import { api } from "../api/axios.ts";
-import type { loginFormSchema } from "../zod/login.ts";
-import { useToast } from "./useToast.ts";
+import { api } from "../api/axios";
+import type { loginFormSchema, registerFormSchema } from "../zod/auth.js";
+import { useToast } from "./useToast";
 import React from "react";
 
-const authUser = "/api/collections/users/auth-with-password";
-const authRefresh = "/api/collections/users/auth-refresh";
-const refreshInterval = 1000 * 60 * 10; // 10 minutes
+const AUTH_USER_ROUTE = "/api/collections/users/auth-with-password";
+const REGISTER_USER_ROUTE = "/api/collections/users/records";
+const AUTH_REFRESH_ROUTE = "/api/collections/users/auth-refresh";
+const REFRESH_INTERVAL = 1000 * 60 * 10; // 10 minutes
 
 export interface Error {
   code: number;
@@ -53,15 +54,17 @@ interface UserContextType {
   fetchUser: (data: z.infer<typeof loginFormSchema>) => void;
   logout: () => void;
   redirect: () => void;
+  registerUser: (data: z.infer<typeof registerFormSchema>) => void;
 }
 
 const UserContext = createContext<UserContextType>({
   user: null,
   isLoading: true,
   error: undefined,
-  fetchUser: () => {},
-  logout: () => {},
-  redirect: () => {},
+  fetchUser: () => { },
+  logout: () => { },
+  redirect: () => { },
+  registerUser: () => { },
 });
 
 export interface CachedUserProperties {
@@ -85,7 +88,7 @@ export const UserProvider = (
   const fetchUser = useCallback(
     (data: z.infer<typeof loginFormSchema>) => {
       setIsLoading(true);
-      api.post<User | Error>(authUser, data).then((response) => {
+      api.post<User | Error>(AUTH_USER_ROUTE, data).then((response) => {
         const responseBody = response.data as User;
         const cachedUserProperties = {
           id: responseBody.record.id,
@@ -117,6 +120,43 @@ export const UserProvider = (
     [router, toast],
   );
 
+
+  const registerUser = useCallback(
+    (data: z.infer<typeof registerFormSchema>) => {
+      setIsLoading(true);
+      api.post<User | Error>(REGISTER_USER_ROUTE, data).then((response) => {
+        const responseBody = response.data as User;
+        const cachedUserProperties = {
+          id: responseBody.record.id,
+          token: responseBody.token,
+          username: responseBody.record.username,
+          name: responseBody.record.name,
+          email: responseBody.record.email,
+          cacheTime: Date.now(),
+        };
+        setUser(cachedUserProperties);
+        localStorage.setItem("user", JSON.stringify(cachedUserProperties));
+        router.push("/app");
+        toast({
+          title: "Account created successfully",
+          description: "Login with your new credentials.",
+          variant: "success",
+        });
+      }).catch((err) => {
+        setError(err.response?.data as Error);
+        toast({
+          title: "Error creating account",
+          description: err.response?.data?.message,
+          variant: "destructive",
+        });
+      }).finally(() => {
+        setIsLoading(false);
+      });
+    },
+    [router, toast],
+  );
+
+
   const redirect = useCallback(() => {
     if (user) router.push("/app");
   }, [router, user]);
@@ -134,7 +174,7 @@ export const UserProvider = (
 
   const refreshUser = useCallback(() => {
     setIsLoading(true);
-    api.post<User | Error>(authRefresh, {}).then((response) => {
+    api.post<User | Error>(AUTH_REFRESH_ROUTE, {}).then((response) => {
       const responseBody = response.data as User;
       const cachedUserProperties = {
         id: responseBody.record.id,
@@ -175,7 +215,7 @@ export const UserProvider = (
       setUser((
         user,
       ) => (cachedUser?.username ? { ...user, ...cachedUser } : null));
-      if (refreshInterval < Date.now() - cachedUser?.cacheTime) refreshUser();
+      if (REFRESH_INTERVAL < Date.now() - cachedUser?.cacheTime) refreshUser();
     }
     addEventListener("focus", onFocus);
 
@@ -189,6 +229,7 @@ export const UserProvider = (
     fetchUser,
     logout,
     redirect,
+    registerUser,
   };
 
   return (
