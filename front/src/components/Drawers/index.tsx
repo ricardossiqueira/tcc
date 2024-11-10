@@ -10,11 +10,21 @@ import React from "react";
 export interface IDrawerProps {
   children: React.ReactNode;
   content: React.ReactNode;
+  disabled?: boolean;
 }
 
 export default function Drawer(
   props: IDrawerProps,
 ) {
+
+  if (props.disabled) {
+    return (
+      <div>
+        {props.children}
+      </div>
+    );
+  }
+
   return (
     <DrawerUI>
       <DrawerTrigger asChild >

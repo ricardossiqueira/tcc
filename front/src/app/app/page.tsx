@@ -18,7 +18,6 @@ import { api } from "../../api/axios";
 import { useToast } from "../../hooks/useToast";
 import { ILlmResponse } from "../../interfaces/llm";
 import React from "react";
-import { AppHeader } from "../../components/Headers/AppHeader";
 
 export default function App() {
   const [payload, setPayload] = useState(
@@ -82,9 +81,7 @@ export default function App() {
 
   return (
     <>
-      <AppHeader />
       <section className="grid grid-cols-5 grid-rows-4 gap-8 w-full p-3 px-[20%] sm:px-[5%] lg:px-[15%] xl:px-[5%]">
-
         <Card className="w-full h-full col-span-2 row-span-1">
           <CardHeader className="px-5 py-4">
             <CardTitle>

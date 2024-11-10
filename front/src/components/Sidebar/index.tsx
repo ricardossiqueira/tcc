@@ -7,15 +7,15 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "../../components/ui/sidebar"
 import useUser from "../../hooks/useUser";
 import { usePathname } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 // Menu items.
 const items = [
@@ -40,20 +40,37 @@ export function AppSidebar() {
     return urlList.some((url) => path === url);
   }
 
+  const { toggleSidebar } = useSidebar()
+
 
   if (pathIncludes(["/"])) return <></>;
 
   return (
-    <Sidebar className="bg-transparent" collapsible="icon">
-      <SidebarContent className="bg-black/5 backdrop-blur-sm">
+    <Sidebar className="border-none" collapsible="icon">
+      <SidebarHeader >
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton size="lg" asChild onClick={toggleSidebar} className="cursor-pointer">
+              <div>
+                <Avatar className="w-8 h-8">
+                  <AvatarImage src="https://github.com/shadcn.png" />
+                  <AvatarFallback>CN</AvatarFallback>
+                </Avatar>
+                <span>
+                  {user?.email}
+                </span>
+              </div>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
+      <SidebarContent>
         <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-          <SidebarGroupLabel>{user?.email}</SidebarGroupLabel>
           <SidebarGroupContent >
-
-            <SidebarMenu>
+            <SidebarMenu >
               {items.map((item) => (
                 <SidebarMenuItem key={item.title} >
-                  <SidebarMenuButton asChild>
+                  <SidebarMenuButton size="lg" asChild>
                     <a href={item.url}>
                       <item.icon />
                       <span>{item.title}</span>
@@ -67,21 +84,6 @@ export function AppSidebar() {
         <SidebarGroup className="group-data-[state=expanded]:hidden">
           <SidebarGroupContent >
             <SidebarMenu>
-              <SidebarMenuItem >
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <Avatar className="w-8 h-8">
-                        <AvatarImage src="https://github.com/shadcn.png" />
-                        <AvatarFallback>CN</AvatarFallback>
-                      </Avatar>
-                      <TooltipContent side="right" >
-                        {user?.email}
-                      </TooltipContent>
-                    </TooltipTrigger>
-                  </Tooltip>
-                </TooltipProvider>
-              </SidebarMenuItem>
               {items.map((item) => (
                 <SidebarMenuItem key={item.title} >
                   <SidebarMenuButton asChild>

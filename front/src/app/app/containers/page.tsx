@@ -7,7 +7,6 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../../../c
 import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Loading from "../../../components/Loading";
-import { AppHeader } from "../../../components/Headers/AppHeader";
 import ContainerStatus from "../../../components/ContainerStatus";
 
 export default function App() {
@@ -35,7 +34,6 @@ export default function App() {
 
   return (
     <>
-      <AppHeader />
       <section className="container mx-auto grid grid-cols-2 grid-rows-4 gap-2 p-3" >
         <span className="col-span-2 row-span-1 flex items-center">
           <h1 className="text-2xl font-bold align-middle">Containers</h1>

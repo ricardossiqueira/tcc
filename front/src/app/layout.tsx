@@ -5,8 +5,9 @@ import { Toaster } from "../components/ui/toaster";
 import { UserProvider } from "../hooks/useUser";
 import ReactQueryProvider from "../utils/providers/ReactQueryProvider";
 import { ThemeProvider } from "../utils/providers/ThemeProvider";
-import { SidebarProvider } from "../components/ui/sidebar";
+import { SidebarInset, SidebarProvider } from "../components/ui/sidebar";
 import { AppSidebar } from "../components/Sidebar";
+import { AppHeader } from "../components/Headers/AppHeader";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -31,11 +32,14 @@ export default function RootLayout({
         >
           <ReactQueryProvider>
             <UserProvider>
-              <SidebarProvider defaultOpen={false}>
+              <SidebarProvider defaultOpen={false} className="p-2 bg-sidebar">
                 <AppSidebar />
-                <main className="container mx-auto">
-                  {children}
-                </main>
+                <SidebarInset className="rounded-md" >
+                  <AppHeader />
+                  <main >
+                    {children}
+                  </main>
+                </SidebarInset>
               </SidebarProvider>
               <Toaster />
             </UserProvider>

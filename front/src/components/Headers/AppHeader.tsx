@@ -6,7 +6,7 @@ import NavBreadcrumb from "./Breadcrumb";
 export function AppHeader() {
   return (
     <header
-      className=" flex w-full items-center h-16 justify-between top-0 sticky z-10"
+      className="bg-black/5 backdrop-blur-sm rounded-t-md top-0 flex shrink-0 items-center gap-2 px-5 py-3 z-50"
       aria-label="Header"
     >
       <div className="flex flex-row items-center space-x-8">

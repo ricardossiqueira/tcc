@@ -98,8 +98,8 @@ type CreateContainerStatsDTO struct {
 }
 
 type ContainersStatsComputedDTO struct {
-	Id               string `db:"id" json:"id"`
-	CountRequests    int64  `db:"count_requests" json:"count_requests"`
-	AvgStartDuration int64  `db:"avg_start_duration" json:"avg_start_duration"`
-	AvgStopDuration  int64  `db:"avg_stop_duration" json:"avg_stop_duration"`
+	Id               string  `db:"id" json:"id"`
+	CountRequests    int64   `db:"count_requests" json:"count_requests"`
+	AvgStartDuration float32 `db:"avg_start_duration" json:"avg_start_duration"`
+	AvgStopDuration  float32 `db:"avg_stop_duration" json:"avg_stop_duration"`
 }
