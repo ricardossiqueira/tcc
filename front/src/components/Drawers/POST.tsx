@@ -3,9 +3,12 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../../api/axios";
+import { z } from "zod";
+import { postRequestPayloadSchema } from "../../zod/postRequestPayload";
 
 interface IPOSTProps {
   containerId: string;
+  payload: z.infer<typeof postRequestPayloadSchema>;
 }
 
 export const POST = (props: IPOSTProps) => {
@@ -13,7 +16,9 @@ export const POST = (props: IPOSTProps) => {
     refetchOnWindowFocus: true,
     queryKey: ["containersPOST"],
     queryFn: async () => {
-      const res = await api.post(`/docker/containers/${props.containerId}`);
+      const res = await api.post(`/docker/containers/${props.containerId}`, {
+        data: props.payload.payload,
+      });
       return res.data;
     },
   });
@@ -22,7 +27,9 @@ export const POST = (props: IPOSTProps) => {
     <div className="mx-2">
       <div className="flex py-1">
         <p className="font-JetBrainsMono mx-2 text-lg">🚀</p>
-        <pre className="font-JetBrainsMono">{JSON.stringify(data, null, 2)}</pre>
+        <pre className="font-JetBrainsMono">
+          {JSON.stringify(data, null, 2)}
+        </pre>
       </div>
       <div className="flex py-1 items-center">
         <p className="font-JetBrainsMono mx-2 text-lg">

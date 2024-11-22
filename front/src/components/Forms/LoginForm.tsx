@@ -61,7 +61,9 @@ export default function LoginForm() {
           )}
         />
         <div className="flex w-full flex-row-reverse">
-          <Button type="submit" loading={isLoading}>Submit</Button>
+          <Button type="submit" loading={isLoading}>
+            Submit
+          </Button>
         </div>
       </form>
     </Form>

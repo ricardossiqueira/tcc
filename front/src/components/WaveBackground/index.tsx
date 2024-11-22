@@ -15,7 +15,9 @@ interface WaveParticlesProps {
   rotation?: { x: number; y: number; z: number }; // Rotation parameter
 }
 
-const WaveParticles: React.FC<WaveParticlesProps> = ({ rotation = { x: 0, y: 0, z: 0 } }) => {
+const WaveParticles: React.FC<WaveParticlesProps> = ({
+  rotation = { x: 0, y: 0, z: 0 },
+}) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
@@ -64,7 +66,7 @@ const WaveParticles: React.FC<WaveParticlesProps> = ({ rotation = { x: 0, y: 0, 
       75,
       windowSize.width / windowSize.height,
       1,
-      10000
+      10000,
     );
     camera.position.set(0, 600, 1200);
     camera.lookAt(0, 0, 0);
@@ -95,7 +97,10 @@ const WaveParticles: React.FC<WaveParticlesProps> = ({ rotation = { x: 0, y: 0, 
 
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute("colorOffset", new THREE.BufferAttribute(colorOffsets, 3));
+    geometry.setAttribute(
+      "colorOffset",
+      new THREE.BufferAttribute(colorOffsets, 3),
+    );
 
     const material = new THREE.ShaderMaterial({
       uniforms: {
@@ -147,8 +152,8 @@ const WaveParticles: React.FC<WaveParticlesProps> = ({ rotation = { x: 0, y: 0, 
     const onClick = () => {
       chromaticShiftRef.current = true;
       shiftStartRef.current = performance.now();
-      distortions.current = distortions.current.map(() =>
-        Math.random() * 30 - 15
+      distortions.current = distortions.current.map(
+        () => Math.random() * 30 - 15,
       );
     };
     window.addEventListener("click", onClick);
@@ -161,7 +166,8 @@ const WaveParticles: React.FC<WaveParticlesProps> = ({ rotation = { x: 0, y: 0, 
 
     const render = () => {
       const elapsedTime = performance.now() - shiftStartRef.current;
-      const positions = particles.geometry.attributes.position.array as Float32Array;
+      const positions = particles.geometry.attributes.position
+        .array as Float32Array;
 
       let i = 0;
       for (let ix = 0; ix < AMOUNTX; ix++) {
@@ -170,8 +176,9 @@ const WaveParticles: React.FC<WaveParticlesProps> = ({ rotation = { x: 0, y: 0, 
             chromaticShiftRef.current && elapsedTime < GLITCH_DURATION
               ? distortions.current[i / 3]
               : 0;
-          positions[i + 1] = (Math.sin((ix + countRef.current) * 0.3) * 50) +
-            (Math.sin((iy + countRef.current) * 0.5) * 50) +
+          positions[i + 1] =
+            Math.sin((ix + countRef.current) * 0.3) * 50 +
+            Math.sin((iy + countRef.current) * 0.5) * 50 +
             distortion;
           i += 3;
         }
@@ -209,7 +216,7 @@ const WaveParticles: React.FC<WaveParticlesProps> = ({ rotation = { x: 0, y: 0, 
     <div
       ref={containerRef}
       style={{ touchAction: "none" }}
-      className="fixed inset-0 w-full h-full -z-10"
+      className="fixed inset-0 w-full h-full"
     />
   );
 };

@@ -12,52 +12,43 @@ interface IContainer {
   image: string;
 }
 
-export function HandleContainerButton(
-  props: { container: IContainer; refetch: () => void },
-) {
-  const { mutateAsync: startMutation, isPending: startPending } = useMutation(
-    {
-      mutationFn: (id: string) => {
-        return api.post(
-          `/docker/containers/${id}/start`,
-        );
-      },
-      onSuccess: () => {
-        props.refetch();
-      },
+export function HandleContainerButton(props: {
+  container: IContainer;
+  refetch: () => void;
+}) {
+  const { mutateAsync: startMutation, isPending: startPending } = useMutation({
+    mutationFn: (id: string) => {
+      return api.post(`/docker/containers/${id}/start`);
     },
-  );
-
-  const { mutateAsync: stopMutation, isPending: stopPending } = useMutation(
-    {
-      mutationFn: (id: string) => {
-        return api.post(
-          `/docker/containers/${id}/stop`,
-        );
-      },
-      onSuccess: () => {
-        props.refetch();
-      },
+    onSuccess: () => {
+      props.refetch();
     },
-  );
+  });
 
-  return (props.container.status === "Stopped"
-    ? (
-      <Button
-        variant="default"
-        loading={startPending}
-        onClick={() => startMutation(props.container.id)}
-      >
-        Start
-      </Button>
-    )
-    : (
-      <Button
-        variant="destructive"
-        loading={stopPending}
-        onClick={() => stopMutation(props.container.id)}
-      >
-        Stop
-      </Button>
-    ));
+  const { mutateAsync: stopMutation, isPending: stopPending } = useMutation({
+    mutationFn: (id: string) => {
+      return api.post(`/docker/containers/${id}/stop`);
+    },
+    onSuccess: () => {
+      props.refetch();
+    },
+  });
+
+  return props.container.status === "Stopped" ? (
+    <Button
+      variant="default"
+      loading={startPending}
+      onClick={() => startMutation(props.container.id)}
+    >
+      Start
+    </Button>
+  ) : (
+    <Button
+      variant="destructive"
+      loading={stopPending}
+      onClick={() => stopMutation(props.container.id)}
+    >
+      Stop
+    </Button>
+  );
 }

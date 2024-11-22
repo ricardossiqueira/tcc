@@ -61,10 +61,10 @@ const UserContext = createContext<UserContextType>({
   user: null,
   isLoading: true,
   error: undefined,
-  fetchUser: () => { },
-  logout: () => { },
-  redirect: () => { },
-  registerUser: () => { },
+  fetchUser: () => {},
+  logout: () => {},
+  redirect: () => {},
+  registerUser: () => {},
 });
 
 export interface CachedUserProperties {
@@ -76,9 +76,11 @@ export interface CachedUserProperties {
   cacheTime: number;
 }
 
-export const UserProvider = (
-  { children }: { children: ReactNode },
-): JSX.Element => {
+export const UserProvider = ({
+  children,
+}: {
+  children: ReactNode;
+}): JSX.Element => {
   const [user, setUser] = useState<CachedUserProperties | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | undefined>(undefined);
@@ -88,74 +90,80 @@ export const UserProvider = (
   const fetchUser = useCallback(
     (data: z.infer<typeof loginFormSchema>) => {
       setIsLoading(true);
-      api.post<User | Error>(AUTH_USER_ROUTE, data).then((response) => {
-        const responseBody = response.data as User;
-        const cachedUserProperties = {
-          id: responseBody.record.id,
-          token: responseBody.token,
-          username: responseBody.record.username,
-          name: responseBody.record.name,
-          email: responseBody.record.email,
-          cacheTime: Date.now(),
-        };
-        setUser(cachedUserProperties);
-        localStorage.setItem("user", JSON.stringify(cachedUserProperties));
-        router.push("/app");
-        toast({
-          title: "Login successful",
-          description: "Redirecting to app.",
-          variant: "success",
+      api
+        .post<User | Error>(AUTH_USER_ROUTE, data)
+        .then((response) => {
+          const responseBody = response.data as User;
+          const cachedUserProperties = {
+            id: responseBody.record.id,
+            token: responseBody.token,
+            username: responseBody.record.username,
+            name: responseBody.record.name,
+            email: responseBody.record.email,
+            cacheTime: Date.now(),
+          };
+          setUser(cachedUserProperties);
+          localStorage.setItem("user", JSON.stringify(cachedUserProperties));
+          router.push("/app");
+          toast({
+            title: "Login successful",
+            description: "Redirecting to app.",
+            variant: "success",
+          });
+        })
+        .catch((err) => {
+          setError(err.response.data as Error);
+          toast({
+            title: "Login failed",
+            description: err.response.data.message,
+            variant: "destructive",
+          });
+        })
+        .finally(() => {
+          setIsLoading(false);
         });
-      }).catch((err) => {
-        setError(err.response.data as Error);
-        toast({
-          title: "Login failed",
-          description: err.response.data.message,
-          variant: "destructive",
-        });
-      }).finally(() => {
-        setIsLoading(false);
-      });
     },
     [router, toast],
   );
-
 
   const registerUser = useCallback(
     (data: z.infer<typeof registerFormSchema>) => {
       setIsLoading(true);
-      api.post<User | Error>(REGISTER_USER_ROUTE, data).then((response) => {
-        const responseBody = response.data as User;
-        const cachedUserProperties = {
-          id: responseBody.record.id,
-          token: responseBody.token,
-          username: responseBody.record.username,
-          name: responseBody.record.name,
-          email: responseBody.record.email,
-          cacheTime: Date.now(),
-        };
-        setUser(cachedUserProperties);
-        localStorage.setItem("user", JSON.stringify(cachedUserProperties));
-        router.push("/app");
-        toast({
-          title: "Account created successfully",
-          description: "Login with your new credentials.",
-          variant: "success",
+      api
+        .post<User | Error>(REGISTER_USER_ROUTE, data)
+        .then((response) => {
+          const responseBody = response.data as User;
+          const cachedUserProperties = {
+            id: responseBody.record.id,
+            token: responseBody.token,
+            username: responseBody.record.username,
+            name: responseBody.record.name,
+            email: responseBody.record.email,
+            cacheTime: Date.now(),
+          };
+          setUser(cachedUserProperties);
+          localStorage.setItem("user", JSON.stringify(cachedUserProperties));
+          router.push("/app");
+          toast({
+            title: "Account created successfully",
+            description: "Login with your new credentials.",
+            variant: "success",
+          });
+        })
+        .catch((err) => {
+          setError(err.response?.data as Error);
+          toast({
+            title: "Error creating account",
+            description: err.response?.data?.message,
+            variant: "destructive",
+          });
+        })
+        .finally(() => {
+          setIsLoading(false);
         });
-      }).catch((err) => {
-        setError(err.response?.data as Error);
-        toast({
-          title: "Error creating account",
-          description: err.response?.data?.message,
-          variant: "destructive",
-        });
-      }).finally(() => {
-        setIsLoading(false);
-      });
     },
     [router, toast],
   );
-
 
   const redirect = useCallback(() => {
     if (user) router.push("/app");
@@ -174,28 +182,32 @@ export const UserProvider = (
 
   const refreshUser = useCallback(() => {
     setIsLoading(true);
-    api.post<User | Error>(AUTH_REFRESH_ROUTE, {}).then((response) => {
-      const responseBody = response.data as User;
-      const cachedUserProperties = {
-        id: responseBody.record.id,
-        token: responseBody.token,
-        username: responseBody.record.username,
-        name: responseBody.record.name,
-        email: responseBody.record.email,
-        cacheTime: Date.now(),
-      };
-      setUser(cachedUserProperties);
-      localStorage.setItem("user", JSON.stringify(cachedUserProperties));
-    }).catch((err) => {
-      setError(err.response.data as Error);
-      logout();
-      toast({
-        title: "Failed to refresh user",
-        description: "Redirecting to login",
+    api
+      .post<User | Error>(AUTH_REFRESH_ROUTE, {})
+      .then((response) => {
+        const responseBody = response.data as User;
+        const cachedUserProperties = {
+          id: responseBody.record.id,
+          token: responseBody.token,
+          username: responseBody.record.username,
+          name: responseBody.record.name,
+          email: responseBody.record.email,
+          cacheTime: Date.now(),
+        };
+        setUser(cachedUserProperties);
+        localStorage.setItem("user", JSON.stringify(cachedUserProperties));
+      })
+      .catch((err) => {
+        setError(err.response.data as Error);
+        logout();
+        toast({
+          title: "Failed to refresh user",
+          description: "Redirecting to login",
+        });
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
-    }).finally(() => {
-      setIsLoading(false);
-    });
   }, [logout, toast]);
 
   useEffect(() => {
@@ -212,9 +224,9 @@ export const UserProvider = (
 
     function onFocus() {
       const cachedUser = JSON.parse(localStorage.getItem("user") || "null");
-      setUser((
-        user,
-      ) => (cachedUser?.username ? { ...user, ...cachedUser } : null));
+      setUser((user) =>
+        cachedUser?.username ? { ...user, ...cachedUser } : null,
+      );
       if (REFRESH_INTERVAL < Date.now() - cachedUser?.cacheTime) refreshUser();
     }
     addEventListener("focus", onFocus);

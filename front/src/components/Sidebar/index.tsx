@@ -1,10 +1,11 @@
-"use client"
+"use client";
 
-import { Home, Container } from "lucide-react"
+import { Home, Container, LogOutIcon } from "lucide-react";
 
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarHeader,
@@ -12,7 +13,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "../../components/ui/sidebar"
+} from "../../components/ui/sidebar";
 import useUser from "../../hooks/useUser";
 import { usePathname } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -29,36 +30,38 @@ const items = [
     url: "/app/containers",
     icon: Container,
   },
-]
+];
 
 export function AppSidebar() {
-  const { user } = useUser();
+  const { user, logout } = useUser();
 
   const path = usePathname();
 
   const pathIncludes = (urlList: string[]) => {
     return urlList.some((url) => path === url);
-  }
+  };
 
-  const { toggleSidebar } = useSidebar()
+  const { toggleSidebar } = useSidebar();
 
-
-  if (pathIncludes(["/"])) return <></>;
+  if (pathIncludes(["/"]) && !user) return <></>;
 
   return (
     <Sidebar className="border-none" collapsible="icon">
-      <SidebarHeader >
+      <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild onClick={toggleSidebar} className="cursor-pointer">
+            <SidebarMenuButton
+              size="lg"
+              asChild
+              onClick={toggleSidebar}
+              className="cursor-pointer"
+            >
               <div>
                 <Avatar className="w-8 h-8">
                   <AvatarImage src="https://github.com/shadcn.png" />
                   <AvatarFallback>CN</AvatarFallback>
                 </Avatar>
-                <span>
-                  {user?.email}
-                </span>
+                <span>{user?.email}</span>
               </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -66,10 +69,10 @@ export function AppSidebar() {
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-          <SidebarGroupContent >
-            <SidebarMenu >
+          <SidebarGroupContent>
+            <SidebarMenu>
               {items.map((item) => (
-                <SidebarMenuItem key={item.title} >
+                <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton size="lg" asChild>
                     <a href={item.url}>
                       <item.icon />
@@ -82,10 +85,10 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
         <SidebarGroup className="group-data-[state=expanded]:hidden">
-          <SidebarGroupContent >
+          <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
-                <SidebarMenuItem key={item.title} >
+                <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <a href={item.url}>
                       <item.icon />
@@ -98,6 +101,21 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              onClick={logout}
+              className="cursor-pointer"
+            >
+              <div>
+                <LogOutIcon /> Logout
+              </div>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
-  )
+  );
 }

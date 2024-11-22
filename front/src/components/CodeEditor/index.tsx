@@ -4,13 +4,18 @@ import React from "react";
 import Editor, { EditorProps, Monaco } from "@monaco-editor/react";
 import { editor } from "monaco-editor";
 
-
 interface IEditorProps extends EditorProps {
   readOnly?: boolean;
 }
 
-export default function CodeEditor({ readOnly = false, ...props }: IEditorProps) {
-  const handleEditorMount = (_editor: editor.IStandaloneCodeEditor, monaco: Monaco) => {
+export default function CodeEditor({
+  readOnly = false,
+  ...props
+}: IEditorProps) {
+  const handleEditorMount = (
+    _editor: editor.IStandaloneCodeEditor,
+    monaco: Monaco,
+  ) => {
     monaco.editor.defineTheme("ayu-dark", {
       base: "vs-dark",
       inherit: true,
@@ -38,22 +43,32 @@ export default function CodeEditor({ readOnly = false, ...props }: IEditorProps)
     monaco.editor.setTheme("ayu-dark");
   };
 
-  if (readOnly) props.options = { ...props.options, readOnly: true, cursorStyle: "line", renderLineHighlight: "none" };
+  if (readOnly)
+    props.options = {
+      ...props.options,
+      readOnly: true,
+      cursorStyle: "line",
+      renderLineHighlight: "none",
+    };
 
   return (
-    <div style={{
-      borderRadius: "0.5rem",
-      overflow: "hidden", // Ensures content stays within the rounded border
-    }}>
+    <div
+      style={{
+        borderRadius: "0.5rem",
+        overflow: "hidden", // Ensures content stays within the rounded border
+      }}
+    >
       {
         /* Hide Monaco Editor cursor */
-        readOnly && <style>
-          {`
+        readOnly && (
+          <style>
+            {`
             .monaco-editor .cursor {
               display: none !important;
             }
           `}
-        </style>
+          </style>
+        )
       }
       <Editor
         theme="ayu-dark"

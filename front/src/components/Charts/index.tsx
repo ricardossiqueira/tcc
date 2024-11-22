@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
+import * as React from "react";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import {
   Card,
@@ -9,24 +9,29 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../../components/ui/card"
-import { useQuery } from "@tanstack/react-query"
-import { getComputedSatsByContainerId, getStatsByContainerId } from "../../api/containerStats"
-import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "../ui/chart"
-
+} from "../../components/ui/card";
+import { useQuery } from "@tanstack/react-query";
+import {
+  getComputedSatsByContainerId,
+  getStatsByContainerId,
+} from "../../api/containerStats";
+import {
+  ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "../ui/chart";
 
 export interface IChartProps {
   id: string;
 }
 
 export function Chart(props: IChartProps) {
-
   const { data: containerStats, isLoading } = useQuery({
     refetchOnWindowFocus: true,
-    queryKey: ["getContainerDetails", props.id, "getStatsByContainerId",],
+    queryKey: ["getContainerDetails", props.id, "getStatsByContainerId"],
     queryFn: () => getStatsByContainerId(props.id),
   });
-
 
   const { data: computedContainerStats } = useQuery({
     refetchOnWindowFocus: true,
@@ -34,11 +39,9 @@ export function Chart(props: IChartProps) {
     queryFn: () => getComputedSatsByContainerId(props.id),
   });
 
-
   if (isLoading) {
     return null;
   }
-
 
   const chartConfig = {
     desktop: {
@@ -49,8 +52,7 @@ export function Chart(props: IChartProps) {
       label: "Stop Duration",
       color: "hsl(var(--chart-2))",
     },
-  } satisfies ChartConfig
-
+  } satisfies ChartConfig;
 
   return (
     <Card>
@@ -62,32 +64,30 @@ export function Chart(props: IChartProps) {
           </CardDescription>
         </div>
         <div className="flex">
-          <div
-            className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-l sm:border-t-0 sm:px-8 sm:py-6"
-          >
+          <div className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-l sm:border-t-0 sm:px-8 sm:py-6">
             <span className="text-xs text-muted-foreground">
               Avg. Start Duration
             </span>
             <span className="text-lg font-bold leading-none sm:text-3xl">
-              {(computedContainerStats?.data.avg_start_duration / 1000).toFixed(2)}s
+              {(computedContainerStats?.data.avg_start_duration / 1000).toFixed(
+                2,
+              )}
+              s
             </span>
           </div>
-          <div
-            className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-l sm:border-t-0 sm:px-8 sm:py-6"
-          >
+          <div className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-l sm:border-t-0 sm:px-8 sm:py-6">
             <span className="text-xs text-muted-foreground">
               Avg. Stop Duration
             </span>
             <span className="text-lg font-bold leading-none sm:text-3xl">
-              {(computedContainerStats?.data.avg_stop_duration / 1000).toFixed(2)}s
+              {(computedContainerStats?.data.avg_stop_duration / 1000).toFixed(
+                2,
+              )}
+              s
             </span>
           </div>
-          <div
-            className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-l sm:border-t-0 sm:px-8 sm:py-6"
-          >
-            <span className="text-xs text-muted-foreground">
-              # of Requests
-            </span>
+          <div className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-l sm:border-t-0 sm:px-8 sm:py-6">
+            <span className="text-xs text-muted-foreground"># of Requests</span>
             <span className="text-lg font-bold leading-none sm:text-3xl">
               {computedContainerStats?.data.count_requests}
             </span>
@@ -109,11 +109,19 @@ export function Chart(props: IChartProps) {
               cursor={false}
               content={<ChartTooltipContent indicator="dashed" />}
             />
-            <Bar dataKey="start_duration" fill="hsl(var(--chart-1))" radius={4} />
-            <Bar dataKey="stop_duration" fill="hsl(var(--chart-2))" radius={4} />
+            <Bar
+              dataKey="start_duration"
+              fill="hsl(var(--chart-1))"
+              radius={4}
+            />
+            <Bar
+              dataKey="stop_duration"
+              fill="hsl(var(--chart-2))"
+              radius={4}
+            />
           </BarChart>
         </ChartContainer>
       </CardContent>
     </Card>
-  )
+  );
 }

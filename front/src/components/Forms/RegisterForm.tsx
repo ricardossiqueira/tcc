@@ -80,14 +80,20 @@ export default function RegisterForm() {
             <FormItem>
               <FormLabel>Password Confirm</FormLabel>
               <FormControl>
-                <Input placeholder="Password confirm" type="password" {...field} />
+                <Input
+                  placeholder="Password confirm"
+                  type="password"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
         <div className="flex w-full flex-row-reverse">
-          <Button type="submit" loading={isLoading}>Submit</Button>
+          <Button type="submit" loading={isLoading}>
+            Submit
+          </Button>
         </div>
       </form>
     </Form>

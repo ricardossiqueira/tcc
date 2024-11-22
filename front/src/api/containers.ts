@@ -26,6 +26,8 @@ export interface IContainerDetails {
 }
 
 export async function getContainerDetails(containerId: string) {
-  const res = await api.get<IContainerDetails>(`/docker/containers/${containerId}/details`);
+  const res = await api.get<IContainerDetails>(
+    `/docker/containers/${containerId}/details`,
+  );
   return res;
 }

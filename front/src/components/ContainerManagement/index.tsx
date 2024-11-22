@@ -15,12 +15,7 @@ import { ReloadIcon } from "@radix-ui/react-icons";
 import React, { useState } from "react";
 import { getUserContainers } from "../../api/containers";
 
-
-
 export function ContainerManagement() {
-
-
-
   const [selected, setSelected] = useState("");
 
   const { data: containers, refetch } = useQuery({
@@ -29,7 +24,6 @@ export function ContainerManagement() {
     queryFn: () => getUserContainers(),
     refetchInterval: 5000,
   });
-
 
   return (
     <Card className="h-fit max-h-[50%]">
@@ -43,9 +37,7 @@ export function ContainerManagement() {
             className="rounded-full"
           >
             <ReloadIcon />
-            <span className="sr-only">
-              Reload
-            </span>
+            <span className="sr-only">Reload</span>
           </Button>
         </CardTitle>
       </CardHeader>
@@ -61,7 +53,13 @@ export function ContainerManagement() {
           <TableBody>
             {containers?.data.map((container) => {
               return (
-                <TableRow key={container.id} onClick={() => { setSelected(container.id) }} className={`cursor-pointer ${selected === container.id && "bg-yellow-500 hover:bg-yellow-400 text-black"}`} >
+                <TableRow
+                  key={container.id}
+                  onClick={() => {
+                    setSelected(container.id);
+                  }}
+                  className={`cursor-pointer ${selected === container.id && "bg-yellow-500 hover:bg-yellow-400 text-black"}`}
+                >
                   <TableCell className="font-medium">{container.id}</TableCell>
                   <TableCell>{container.status ?? "N/A"}</TableCell>
                   <TableCell>{container.image ?? "N/A"}</TableCell>

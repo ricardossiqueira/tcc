@@ -3,7 +3,9 @@ import nextMdx from "@next/mdx";
 const withMdx = nextMdx({
   // By default only the `.mdx` extension is supported.
   extension: /\.mdx?$/,
-  options: {/* otherOptions… */},
+  options: {
+    /* otherOptions… */
+  },
 });
 
 /** @type {import('next').NextConfig} */

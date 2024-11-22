@@ -23,6 +23,8 @@ export const Counter = () => {
   }, []);
 
   return messages.map((v, i) => (
-    <p className="font-JetBrainsMono" key={i}>{"🚀"} {v}</p>
+    <p className="font-JetBrainsMono" key={i}>
+      {"🚀"} {v}
+    </p>
   ));
 };

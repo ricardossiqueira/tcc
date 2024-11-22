@@ -6,20 +6,24 @@ import { useForm, UseFormProps } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 export const postRequestPayloadSchema = z.object({
-  payload: z.array(z.object({
-    key: z.string(),
-    value: z.any().nullable(),
-  })),
+  payload: z.array(
+    z.object({
+      key: z.string(),
+      value: z.any().nullable(),
+    }),
+  ),
 });
 
 export type PostRequestPayloadSchema = z.infer<
   typeof postRequestPayloadSchema
 >["payload"][number];
 
-export const basePayload: PostRequestPayloadSchema[] = [{
-  key: "",
-  value: null,
-}];
+export const basePayload: PostRequestPayloadSchema[] = [
+  {
+    key: "",
+    value: null,
+  },
+];
 
 export function useZodForm<TSchema extends z.ZodType>(
   props: Omit<UseFormProps<TSchema["_input"]>, "resolver"> & {

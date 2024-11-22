@@ -22,7 +22,9 @@ export const GET = (props: IGETProps) => {
     <div className="mx-2">
       <div className="flex py-1">
         <p className="font-JetBrainsMono mx-2 text-lg">🚀</p>
-        <pre className="font-JetBrainsMono">{JSON.stringify(data, null, 2)}</pre>
+        <pre className="font-JetBrainsMono">
+          {JSON.stringify(data, null, 2)}
+        </pre>
       </div>
       <div className="flex py-1 items-center">
         <p className="font-JetBrainsMono mx-2 text-lg">

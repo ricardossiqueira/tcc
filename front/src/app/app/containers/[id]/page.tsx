@@ -1,10 +1,17 @@
-"use client"
+"use client";
 
 import { useParams } from "next/navigation";
 import React from "react";
 import { Chart } from "../../../../components/Charts";
 import CodeEditor from "../../../../components/CodeEditor";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../../../components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "../../../../components/ui/card";
 import { getContainerDetails } from "../../../../api/containers";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Textarea } from "../../../../components/ui/textarea";
@@ -15,8 +22,8 @@ import { api } from "../../../../api/axios";
 import ContainerStatus from "../../../../components/ContainerStatus";
 import Drawer from "../../../../components/Drawers";
 import { GET } from "../../../../components/Drawers/GET";
-import { POST } from "../../../../components/Drawers/POST";
-
+import PostRequestPayloadForm from "../../../../components/Forms/PostRequestPayloadForm";
+import { Dialog, DialogTrigger } from "../../../../components/ui/dialog";
 
 export default function App() {
   const { id } = useParams();
@@ -29,46 +36,40 @@ export default function App() {
     queryFn: () => getContainerDetails(id as string),
   });
 
-  const { mutateAsync: startMutation, isPending: startPending } = useMutation(
-    {
-      mutationFn: () => {
-        return api.post(
-          `/docker/containers/${id}/start`,
-        );
-      },
-      onSuccess: () =>
-        queryClient.invalidateQueries({ queryKey: ["getContainerDetails", id as string] })
+  const { mutateAsync: startMutation, isPending: startPending } = useMutation({
+    mutationFn: () => {
+      return api.post(`/docker/containers/${id}/start`);
     },
-  );
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        queryKey: ["getContainerDetails", id as string],
+      }),
+  });
 
-  const { mutateAsync: stopMutation, isPending: stopPending } = useMutation(
-    {
-      mutationFn: () => {
-        return api.post(
-          `/docker/containers/${id}/stop`,
-        );
-      },
-      onSuccess: () =>
-        queryClient.invalidateQueries({ queryKey: ["getContainerDetails", id as string] })
+  const { mutateAsync: stopMutation, isPending: stopPending } = useMutation({
+    mutationFn: () => {
+      return api.post(`/docker/containers/${id}/stop`);
     },
-  );
-
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        queryKey: ["getContainerDetails", id as string],
+      }),
+  });
 
   if (isLoading) {
-    return (
-      <Loading />
-    )
+    return <Loading />;
   }
 
   return (
     <>
-      {/* <AppHeader /> */}
-      <section className="p-10 grid grid-cols-6 grid-rows-* gap-4" >
+      <section className="p-10 grid grid-cols-6 grid-rows-* gap-4">
         <div className="col-span-full row-span-1 row-start-1">
           <div className="flex items-center w-full justify-between">
             <span className="flex items-center">
               <ContainerIcon />
-              <h1 className="ml-3 text-2xl font-bold align-middle">{container?.data.name}</h1>
+              <h1 className="ml-3 text-2xl font-bold align-middle">
+                {container?.data.name}
+              </h1>
             </span>
             <ContainerStatus status={container?.data.status} />
           </div>
@@ -77,28 +78,61 @@ export default function App() {
           <div className="row-start-1 row-span-1 col-span-3">
             <Card className="h-full">
               <CardHeader>
-                <CardTitle>
-                  Prompt
-                </CardTitle>
+                <CardTitle>Prompt</CardTitle>
               </CardHeader>
               <CardContent>
                 <Textarea
                   className="resize-none h-28"
-                  defaultValue={container?.data.prompt} readOnly={true} />
+                  defaultValue={container?.data.prompt}
+                  readOnly={true}
+                />
               </CardContent>
-              <CardFooter>
-              </CardFooter>
+              <CardFooter></CardFooter>
             </Card>
           </div>
           <div className="row-start-2 row-span-1 col-span-3 grid grid-rows-2 grid-cols-2 gap-4">
-            <Options onClick={startMutation} isLoading={startPending} disabled={container?.data.status === "Up"} title="Start" content="Start your container" icon={<Rocket className="scale-[8] text-zinc-800 mr-14 -z-10" />} />
-            <Options onClick={stopMutation} isLoading={stopPending} disabled={container?.data.status === "Stopped"} title="Stop" content="Stop running container" icon={<Bomb className="scale-[8] text-zinc-800 mr-14 -z-10" />} />
-            <Drawer content={<GET containerId={id as string} />} disabled={startPending || stopPending}>
-              <Options disabled={startPending || stopPending} title="GET" content="Make a GET request" icon={<FileDown className="scale-[8] text-zinc-800 mr-14 -z-10" />} />
+            <Options
+              onClick={startMutation}
+              isLoading={startPending}
+              disabled={container?.data.status === "Up"}
+              title="Start"
+              content="Start your container"
+              icon={<Rocket className="scale-[8] text-zinc-800 mr-14 -z-10" />}
+            />
+            <Options
+              onClick={stopMutation}
+              isLoading={stopPending}
+              disabled={container?.data.status === "Stopped"}
+              title="Stop"
+              content="Stop running container"
+              icon={<Bomb className="scale-[8] text-zinc-800 mr-14 -z-10" />}
+            />
+            <Drawer
+              content={<GET containerId={id as string} />}
+              disabled={startPending || stopPending}
+            >
+              <Options
+                disabled={startPending || stopPending}
+                title="GET"
+                content="Make a GET request"
+                icon={
+                  <FileDown className="scale-[8] text-zinc-800 mr-14 -z-10" />
+                }
+              />
             </Drawer>
-            <Drawer content={<POST containerId={id as string} />} disabled={startPending || stopPending} >
-              <Options disabled={startPending || stopPending} title="POST" content="Make a POST request" icon={<FileUp className="scale-[8] text-zinc-800 mr-14 -z-10" />} />
-            </Drawer>
+            <Dialog>
+              <DialogTrigger>
+                <Options
+                  disabled={startPending || stopPending}
+                  title="POST"
+                  content="Make a POST request"
+                  icon={
+                    <FileUp className="scale-[8] text-zinc-800 mr-14 -z-10" />
+                  }
+                />
+              </DialogTrigger>
+              <PostRequestPayloadForm />
+            </Dialog>
           </div>
           <div className="row-start-3 row-span-1 col-span-3">
             <Chart id={id as string} />
@@ -107,9 +141,7 @@ export default function App() {
         <div className="col-span-3 row-start-2 row-span-2">
           <Card>
             <CardHeader>
-              <CardTitle>
-                Deployed script
-              </CardTitle>
+              <CardTitle>Deployed script</CardTitle>
               <CardDescription>
                 The script that is currently deployed on the container.
               </CardDescription>
@@ -117,15 +149,10 @@ export default function App() {
             <CardContent>
               <CodeEditor readOnly={true} value={container?.data.script} />
             </CardContent>
-            <CardFooter>
-            </CardFooter>
+            <CardFooter></CardFooter>
           </Card>
         </div>
       </section>
     </>
   );
-
-
-
-
 }

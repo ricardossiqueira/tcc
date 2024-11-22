@@ -21,9 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={"antialiased"}
-      >
+      <body className={"antialiased"}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -32,13 +30,11 @@ export default function RootLayout({
         >
           <ReactQueryProvider>
             <UserProvider>
-              <SidebarProvider defaultOpen={false} className="p-2 bg-sidebar">
+              <SidebarProvider defaultOpen={false} className={"bg-sidebar"}>
                 <AppSidebar />
-                <SidebarInset className="rounded-md" >
+                <SidebarInset className="rounded-md">
                   <AppHeader />
-                  <main >
-                    {children}
-                  </main>
+                  <main>{children}</main>
                 </SidebarInset>
               </SidebarProvider>
               <Toaster />
