@@ -12,6 +12,7 @@ import (
 )
 
 const BaseURL = "https://api.llama-api.com"
+const Model = "deepseek-r1"
 
 type Client struct {
 	APIKey string
@@ -56,7 +57,7 @@ func (c *Client) GenerateText(prompt string) (ResponsePayload, error) {
 				Content: prompt,
 			},
 		},
-		Model: "llama3.1-70b",
+		Model: Model,
 	}
 
 	data, err := json.Marshal(payload)

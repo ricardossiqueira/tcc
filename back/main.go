@@ -115,18 +115,13 @@ func main() {
 			return c.JSON(http.StatusOK, chatCompletion)
 		}, apis.LoadAuthContext(app))
 
-		//DONE: Get container details by id (script, propmpt and status)
 		e.Router.GET("/docker/containers/:id/details", cn.Details, middlewares.RequireContainerOwnership(app))
 
-		//DONE: Get statistics from container (avg start time, avg stop time, # of requests and type of requests)
 		e.Router.GET("/docker/containers/:id/stats", cn.Stats, middlewares.RequireContainerOwnership(app))
 		e.Router.GET("/docker/containers/:id/computed-stats", cn.ComputedStats, middlewares.RequireContainerOwnership(app))
 
-		//TODO: Listen to container logs
 		e.Router.GET("/docker/containers/:id/logs", func(c echo.Context) error { return nil }, middlewares.RequireContainerOwnership(app))
 
-		//TODO: Add human readable id and short description to containers
-		//TODO: Docker pull image if image is not found
 		return nil
 	})
 
