@@ -106,6 +106,7 @@ func main() {
 			}
 
 			chatCompletion, err := llm.Run(body.Message)
+
 			if err != nil {
 				return apis.NewBadRequestError(err.Error(), nil)
 			}
@@ -125,6 +126,7 @@ func main() {
 		e.Router.GET("/docker/containers/:id/logs", func(c echo.Context) error { return nil }, middlewares.RequireContainerOwnership(app))
 
 		//TODO: Add human readable id and short description to containers
+		//TODO: Docker pull image if image is not found
 		return nil
 	})
 

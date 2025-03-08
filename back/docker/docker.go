@@ -14,11 +14,11 @@ import (
 )
 
 type Config struct {
-	image         string
-	workingDir    string
-	containerPort string
-	exposedPort   string ""
-	cmd           []string
+	image         string   // Docker image name used for container creation.
+	workingDir    string   // Working directory inside the container.
+	containerPort string   // Port exposed by the container.
+	exposedPort   string   "" // Port mapped to the host machine.
+	cmd           []string // Command to be executed when the container starts.
 }
 
 var containerConfig = Config{
@@ -28,9 +28,27 @@ var containerConfig = Config{
 	cmd:           []string{"python3", "-m", "flask", "run", "--host=0.0.0.0"},
 }
 
-// Handle container creation steps, here you must set the port will be allocated
-// to the container in the moment of the creation. THIS CAN NOT BE CHANGED BY
-// THE CONTAINER START FUNCTION!
+// CreateContainer creates a new Docker container, assigns a port, and copies files into it.
+//
+// Parameters:
+//   - app: A pointer to a PocketBase instance, used for logging.
+//   - dockerCli: A Docker client instance used to create and manage containers.
+//   - dockerCtx: The Docker context used for API interactions.
+//   - tar: A bytes buffer containing the files to be copied into the container.
+//   - exposedPort: The port on the host machine that will be mapped to the container.
+//
+// Returns:
+//   - container.CreateResponse: A struct containing the container ID and other metadata.
+//   - error: An error if the container creation process fails.
+//
+// Behavior:
+// 1. Creates a new Docker container using the predefined configuration (`containerConfig`).
+// 2. Maps the container's internal port to the specified exposed host port.
+// 3. Copies the provided files (`tar` buffer) into the container's working directory.
+// 4. Logs debug messages to indicate successful creation and file copy operations.
+//
+// Notes:
+// - The exposed port is assigned at creation time and **cannot** be changed when starting the container.
 func CreateContainer(app *pocketbase.PocketBase, dockerCli *client.Client, dockerCtx context.Context, tar bytes.Buffer, exposedPort string) (container.CreateResponse, error) {
 	resp, err := dockerCli.ContainerCreate(dockerCtx, &container.Config{
 		Image:        containerConfig.image,
