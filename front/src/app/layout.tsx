@@ -7,7 +7,7 @@ import ReactQueryProvider from "../utils/providers/ReactQueryProvider";
 import { ThemeProvider } from "../utils/providers/ThemeProvider";
 import { SidebarInset, SidebarProvider } from "../components/ui/sidebar";
 import { AppSidebar } from "../components/Sidebar";
-import { AppHeader } from "../components/Headers/AppHeader";
+import { AppHeader } from "../components/NavBar/NavBar";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -20,21 +20,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={"antialiased"}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
+          defaultTheme="dark"
         >
           <ReactQueryProvider>
             <UserProvider>
-              <SidebarProvider defaultOpen={false} className={"bg-sidebar"}>
+              <SidebarProvider defaultOpen={false} className="flex h-screen">
                 <AppSidebar />
-                <SidebarInset className="rounded-md">
+                <SidebarInset>
                   <AppHeader />
-                  <main>{children}</main>
+                  <main className="flex-1 overflow-auto">{children}</main>
                 </SidebarInset>
               </SidebarProvider>
               <Toaster />

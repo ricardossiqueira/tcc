@@ -43,7 +43,7 @@ export default function App() {
           <Card
             key={container.id}
             onClick={() => navigateToContainer(container.id)}
-            className="col-span-1 row-span-1 hover:bg-gradient-to-br from-yellow-200 to-yellow-500 cursor-pointer hover:text-black group hover:scale-[1.01] transition-transform duration-300 hover:z-10"
+            className="col-span-1 row-span-1 hover:bg-gradient-to-r from-purple-400 to-pink-600 cursor-pointer group transition-transform duration-300 hover:z-10"
           >
             <CardHeader>
               <CardTitle className="flex items-center justify-between">

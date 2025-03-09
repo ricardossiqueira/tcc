@@ -61,10 +61,10 @@ const UserContext = createContext<UserContextType>({
   user: null,
   isLoading: true,
   error: undefined,
-  fetchUser: () => {},
-  logout: () => {},
-  redirect: () => {},
-  registerUser: () => {},
+  fetchUser: () => { },
+  logout: () => { },
+  redirect: () => { },
+  registerUser: () => { },
 });
 
 export interface CachedUserProperties {
@@ -112,7 +112,7 @@ export const UserProvider = ({
           });
         })
         .catch((err) => {
-          setError(err.response.data as Error);
+          setError(err.response?.data as Error);
           toast({
             title: "Login failed",
             description: err.response.data.message,
@@ -198,7 +198,7 @@ export const UserProvider = ({
         localStorage.setItem("user", JSON.stringify(cachedUserProperties));
       })
       .catch((err) => {
-        setError(err.response.data as Error);
+        setError(err.response?.data as Error);
         logout();
         toast({
           title: "Failed to refresh user",

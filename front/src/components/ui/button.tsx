@@ -1,3 +1,5 @@
+"use client"
+
 import * as React from "react";
 import { Slot, Slottable } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
@@ -37,16 +39,16 @@ const buttonVariants = cva(
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
+  VariantProps<typeof buttonVariants> {
   asChild?: boolean;
-  loading?: boolean;
+  isLoading?: boolean;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   (
     {
       className,
-      loading = false,
+      isLoading = false,
       disabled,
       children,
       variant,
@@ -61,11 +63,11 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
-        disabled={loading || disabled}
+        disabled={isLoading || disabled}
         {...props}
       >
-        {loading && <Loader2 className="animate-spin mr-2 h-4 w-4" />}
-        <Slottable>{loading ? "Loading..." : children}</Slottable>
+        {isLoading && <Loader2 className="animate-spin mr-2 h-4 w-4" />}
+        <Slottable>{isLoading ? "Loading..." : children}</Slottable>
       </Comp>
     );
   },

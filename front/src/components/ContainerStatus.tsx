@@ -16,7 +16,7 @@ export default function ContainerStatus({ status }: IContainerStatusProps) {
       <TooltipProvider>
         <TooltipContent>Container status</TooltipContent>
         <TooltipTrigger>
-          <span className="p-1 rounded-sm cursor-default text-base border flex items-center space-x-1">
+          <span className="p-1 rounded-sm cursor-default text-base flex items-center space-x-1">
             {status === "Up" ? (
               <Dot className="text-green-500 scale-[2]" />
             ) : (

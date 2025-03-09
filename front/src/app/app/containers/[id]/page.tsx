@@ -143,7 +143,7 @@ export default function App() {
             <CardHeader>
               <CardTitle>Deployed script</CardTitle>
               <CardDescription>
-                The script that is currently deployed on the container.
+                Script currently deployed to the container.
               </CardDescription>
             </CardHeader>
             <CardContent>

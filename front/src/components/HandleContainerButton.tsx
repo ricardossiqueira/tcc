@@ -37,7 +37,7 @@ export function HandleContainerButton(props: {
   return props.container.status === "Stopped" ? (
     <Button
       variant="default"
-      loading={startPending}
+      isLoading={startPending}
       onClick={() => startMutation(props.container.id)}
     >
       Start
@@ -45,7 +45,7 @@ export function HandleContainerButton(props: {
   ) : (
     <Button
       variant="destructive"
-      loading={stopPending}
+      isLoading={stopPending}
       onClick={() => stopMutation(props.container.id)}
     >
       Stop

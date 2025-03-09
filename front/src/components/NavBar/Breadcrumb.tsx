@@ -49,9 +49,9 @@ export default function NavBreadcrumb() {
               <BreadcrumbSeparator />
             </span>
           ) : pathList
-              .map((p, i) => (i <= index ? p : ""))
-              .slice(0, pathList.length - 1)
-              .join("/") === "app/containers" ? (
+            .map((p, i) => (i <= index ? p : ""))
+            .slice(0, pathList.length - 1)
+            .join("/") === "app/containers" ? (
             <BreadcrumbItem key={index}>
               <DropdownMenu>
                 <DropdownMenuTrigger>
@@ -63,6 +63,7 @@ export default function NavBreadcrumb() {
                   {containers?.data.map((container) => (
                     <DropdownMenuItem
                       key={container.id}
+
                       onClick={() =>
                         push(
                           `/${[...pathList.map((p, i) => (i <= index ? p : "")).slice(0, pathList.length - 1), container.id].join("/")}`,
