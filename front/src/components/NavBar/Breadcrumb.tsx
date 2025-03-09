@@ -59,7 +59,7 @@ export default function NavBreadcrumb() {
                     {containerName(path)} <ChevronDown className="scale-75" />
                   </BreadcrumbPage>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-black/5 backdrop-blur-sm">
+                <DropdownMenuContent>
                   {containers?.data.map((container) => (
                     <DropdownMenuItem
                       key={container.id}
