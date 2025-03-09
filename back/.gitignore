@@ -1,4 +1,4 @@
 .vscode
+.vscode/settings.json
 .env
 pb_data
-pb_data/*

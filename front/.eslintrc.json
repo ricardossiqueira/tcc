@@ -1,3 +1,6 @@
 {
-  "extends": ["eslint:recommended", "next", "plugin:storybook/recommended"]
+  "extends": [
+    "eslint:recommended",
+    "next"
+  ]
 }
