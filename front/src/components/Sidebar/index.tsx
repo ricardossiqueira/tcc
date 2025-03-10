@@ -6,6 +6,7 @@ import {
   Menu,
   Container,
   Rocket,
+  Boxes,
 } from "lucide-react"
 
 import { Home } from "lucide-react"
@@ -55,14 +56,14 @@ export function AppSidebar() {
     <>
       <button
         type="button"
-        className="lg:hidden fixed top-4 left-4 z-[70] p-2 rounded-lg bg-white dark:bg-[#0F0F12] shadow-md"
+        className="lg:hidden fixed top-4 left-4 z-40 p-2 rounded-lg bg-white dark:bg-[#0F0F12] shadow-md"
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
       >
         <Menu className="h-5 w-5" />
       </button>
       <nav
         className={`
-                fixed inset-y-0 left-0 z-[70] w-64 bg-white dark:bg-[#0F0F12] transform transition-transform duration-200 ease-in-out
+                fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-[#0F0F12] transform transition-transform duration-200 ease-in-out
                 lg:translate-x-0 lg:static lg:w-64 border-r border-gray-200 dark:border-[#1F1F23]
                 ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}
             `}
@@ -105,7 +106,7 @@ export function AppSidebar() {
                   <NavItem href="/app" icon={Home}>
                     Home
                   </NavItem>
-                  <NavItem href="/app/containers" icon={Container}>
+                  <NavItem href="/app/containers" icon={Boxes}>
                     Containers
                   </NavItem>
                 </div>

@@ -73,6 +73,7 @@ type ContainerListDTO struct {
 	Image       string `db:"image" json:"image"`
 	Name        string `db:"name" json:"name"`
 	Description string `db:"description" json:"description"`
+	Created     string `db:"created" json:"created"`
 }
 
 type ChatDTO struct {

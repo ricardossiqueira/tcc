@@ -44,11 +44,11 @@ export function Chart(props: IChartProps) {
   }
 
   const chartConfig = {
-    desktop: {
+    start_duration: {
       label: "Start Duration",
       color: "hsl(var(--chart-1))",
     },
-    mobile: {
+    stop_duration: {
       label: "Stop Duration",
       color: "hsl(var(--chart-2))",
     },
@@ -56,7 +56,7 @@ export function Chart(props: IChartProps) {
 
   return (
     <Card>
-      <CardHeader className="flex flex-col items-stretch space-y-0 border-b p-0 sm:flex-row">
+      <CardHeader className="flex flex-col items-stretch space-y-0 border-b border-border p-0 sm:flex-row">
         <div className="flex flex-1 flex-col justify-center gap-1 px-6 py-5 sm:py-6">
           <CardTitle>Container Stats</CardTitle>
           <CardDescription>
@@ -64,7 +64,7 @@ export function Chart(props: IChartProps) {
           </CardDescription>
         </div>
         <div className="flex">
-          <div className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-l sm:border-t-0 sm:px-8 sm:py-6">
+          <div className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-t border-border px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-l sm:border-t-0 sm:px-8 sm:py-6">
             <span className="text-xs text-muted-foreground">
               Avg. Start Duration
             </span>
@@ -75,7 +75,7 @@ export function Chart(props: IChartProps) {
               s
             </span>
           </div>
-          <div className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-l sm:border-t-0 sm:px-8 sm:py-6">
+          <div className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-t border-border px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-l sm:border-t-0 sm:px-8 sm:py-6">
             <span className="text-xs text-muted-foreground">
               Avg. Stop Duration
             </span>
@@ -86,7 +86,7 @@ export function Chart(props: IChartProps) {
               s
             </span>
           </div>
-          <div className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-l sm:border-t-0 sm:px-8 sm:py-6">
+          <div className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-t border-border px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-l sm:border-t-0 sm:px-8 sm:py-6">
             <span className="text-xs text-muted-foreground"># of Requests</span>
             <span className="text-lg font-bold leading-none sm:text-3xl">
               {computedContainerStats?.data.count_requests}
@@ -95,10 +95,8 @@ export function Chart(props: IChartProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig}>
+        <ChartContainer config={chartConfig} className="max-h-96 w-full">
           <BarChart
-            width={600}
-            height={300}
             data={containerStats?.data}
             margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
           >

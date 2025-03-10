@@ -21,7 +21,7 @@ export default function Drawer(props: IDrawerProps) {
   return (
     <DrawerUI>
       <DrawerTrigger asChild>{props.children}</DrawerTrigger>
-      <DrawerContent>
+      <DrawerContent className="z-[100]">
         <div className="p-3 w-full">
           <DrawerHeader>
             <DrawerTitle>Terminal</DrawerTitle>

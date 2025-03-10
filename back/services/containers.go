@@ -234,7 +234,6 @@ func (cn Container) ContainerGET(c echo.Context) error {
 	if err != nil {
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
-
 	status, value := ProxyGET(fmt.Sprintf("http://localhost:%s", container.Port))
 	return c.JSON(status, value)
 }

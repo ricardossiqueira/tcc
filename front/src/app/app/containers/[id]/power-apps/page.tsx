@@ -7,6 +7,9 @@ import { Button } from "../../../../../components/ui/button"
 import { Card } from "../../../../../components/ui/card"
 import { cn } from "../../../../../lib/utils"
 import { GradientSpan } from "../../../../../components/GradientSpan"
+import SyntaxHighlighter from "react-syntax-highlighter"
+import docco from "react-syntax-highlighter/dist/cjs/styles/hljs/docco"
+import { dracula } from "react-syntax-highlighter/dist/esm/styles/hljs"
 
 export default function ApiIntegrationGuide() {
   const [activeStep, setActiveStep] = useState(0)
@@ -202,7 +205,7 @@ app.post('/webhooks', express.json(), (req, res) => {
   return (
     <div className="min-h-screen">
       {/* Side navigation */}
-      <div className="hidden lg:block fixed top-20 right-20 bottom-4 w-96 overflow-auto py-8 px-4">
+      <div className="hidden lg:block fixed top-20 right-20 bottom-4 w-[15%] overflow-auto py-8 px-4">
         <nav className="space-y-1">
           {steps.map((step, index) => (
             <button
@@ -288,7 +291,7 @@ app.post('/webhooks', express.json(), (req, res) => {
                   )}
 
                   {step.code && (
-                    <Card className="bg-gray-900 text-gray-100 p-4 rounded-lg relative font-mono text-sm overflow-hidden">
+                    <Card className="border-0 p-4 rounded-lg relative font-mono text-sm overflow-hidden">
                       <Button
                         size="icon"
                         variant="ghost"
@@ -298,7 +301,7 @@ app.post('/webhooks', express.json(), (req, res) => {
                       >
                         <Copy className="h-4 w-4" />
                       </Button>
-                      <pre className="whitespace-pre-wrap overflow-x-auto">{step.code}</pre>
+                      <SyntaxHighlighter language="javascript" style={dracula} className="whitespace-pre-wrap overflow-x-auto rounded-md" >{step.code}</SyntaxHighlighter>
                     </Card>
                   )}
                 </div>
