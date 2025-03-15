@@ -9,7 +9,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../../components/ui/card";
+} from "../ui/card";
 import { useQuery } from "@tanstack/react-query";
 import {
   getComputedSatsByContainerId,
@@ -22,11 +22,11 @@ import {
   ChartTooltipContent,
 } from "../ui/chart";
 
-export interface IChartProps {
+export interface ContainerMetricsTabProps {
   id: string;
 }
 
-export function Chart(props: IChartProps) {
+export function ContainerMetricsTab(props: ContainerMetricsTabProps) {
   const { data: containerStats, isLoading } = useQuery({
     refetchOnWindowFocus: true,
     queryKey: ["getContainerDetails", props.id, "getStatsByContainerId"],

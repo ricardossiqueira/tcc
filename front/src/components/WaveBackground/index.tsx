@@ -28,8 +28,8 @@ const WaveParticles: React.FC<WaveParticlesProps> = ({
   const distortions = useRef(new Float32Array(AMOUNTX * AMOUNTY));
 
   const [windowSize, setWindowSize] = useState({
-    width: window.innerWidth,
-    height: window.innerHeight,
+    width: 0,
+    height: 0,
   });
 
   // Update window dimensions state on resize
@@ -40,6 +40,7 @@ const WaveParticles: React.FC<WaveParticlesProps> = ({
         height: window.innerHeight,
       });
     };
+    handleResize(); // Set initial window dimensions
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);

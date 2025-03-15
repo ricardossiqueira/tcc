@@ -39,7 +39,7 @@ export default function ContainerList() {
     }
   }
 
-  const sortedContainers = [...containers?.data].sort((a, b) => {
+  const sortedContainers = [...containers].sort((a, b) => {
     if (a[sortField] < b[sortField]) return sortDirection === "asc" ? -1 : 1
     if (a[sortField] > b[sortField]) return sortDirection === "asc" ? 1 : -1
     return 0
@@ -121,6 +121,7 @@ export default function ContainerList() {
                 <div className="flex justify-end gap-2">
                   {container.status === "Up" ? (
                     <Button
+                      className="hover:bg-red-600 cursor-pointer"
                       variant="outline"
                       size="icon"
                       onClick={() => { }}
@@ -146,12 +147,12 @@ export default function ContainerList() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem>
+                      <DropdownMenuItem className="cursor-pointer">
                         <RefreshCw className="mr-2 h-4 w-4" />
                         Restart
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-red-600">
+                      <DropdownMenuItem className="text-red-600 cursor-pointer">
                         <Trash2 className="mr-2 h-4 w-4" />
                         Delete
                       </DropdownMenuItem>

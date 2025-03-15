@@ -18,6 +18,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { getUserContainers } from "../../api/containers";
 import { ChevronDown } from "lucide-react";
+import { Button } from "../ui/button";
 
 export default function NavBreadcrumb() {
   const path = usePathname();
@@ -31,7 +32,7 @@ export default function NavBreadcrumb() {
   });
 
   const containerName = (path: string) =>
-    containers?.data.find((container) => container.id === path)?.name;
+    containers?.find((container) => container.id === path)?.name;
 
   return (
     <Breadcrumb>
@@ -54,16 +55,18 @@ export default function NavBreadcrumb() {
             .join("/") === "app/containers" ? (
             <BreadcrumbItem key={index}>
               <DropdownMenu>
-                <DropdownMenuTrigger>
-                  <BreadcrumbPage className="flex items-center">
-                    {containerName(path)} <ChevronDown className="scale-75" />
-                  </BreadcrumbPage>
-                </DropdownMenuTrigger>
+                {containerName(path)}
+                <BreadcrumbPage className="flex items-center">
+                  <DropdownMenuTrigger>
+                    <Button variant="outline" size="icon" className="p-1 h-6 w-6" asChild>
+                      <ChevronDown />
+                    </Button>
+                  </DropdownMenuTrigger>
+                </BreadcrumbPage>
                 <DropdownMenuContent>
-                  {containers?.data.map((container) => (
+                  {containers?.map((container) => (
                     <DropdownMenuItem
                       key={container.id}
-
                       onClick={() =>
                         push(
                           `/${[...pathList.map((p, i) => (i <= index ? p : "")).slice(0, pathList.length - 1), container.id].join("/")}`,

@@ -1,14 +1,14 @@
 "use client"
 
+import React from "react"
 import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
-import { ChevronDown, Moon, Sun, Check, Copy, ExternalLink } from "lucide-react"
+import { ChevronDown, Check, Copy, ExternalLink } from "lucide-react"
 import { Button } from "../../../../../components/ui/button"
 import { Card } from "../../../../../components/ui/card"
 import { cn } from "../../../../../lib/utils"
 import { GradientSpan } from "../../../../../components/GradientSpan"
 import SyntaxHighlighter from "react-syntax-highlighter"
-import docco from "react-syntax-highlighter/dist/cjs/styles/hljs/docco"
 import { dracula } from "react-syntax-highlighter/dist/esm/styles/hljs"
 
 export default function ApiIntegrationGuide() {

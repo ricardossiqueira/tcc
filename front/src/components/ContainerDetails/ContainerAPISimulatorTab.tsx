@@ -15,8 +15,10 @@ import { useForm } from "react-hook-form"
 import { postRequestRawJSONSchema, PostRequestRawJSONSchema } from "../../zod/postRequestPayload"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form"
+import SyntaxHighlighter from "react-syntax-highlighter"
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism"
 
-interface ContainerApiSimulatorProps {
+interface ContainerApiSimulatorTabProps {
   containerId: string
 }
 
@@ -27,9 +29,7 @@ interface HistoryItem {
   timestamp: string;
 }
 
-
-
-export function ContainerApiSimulator({ containerId }: ContainerApiSimulatorProps) {
+export function ContainerApiSimulatorTab({ containerId }: ContainerApiSimulatorTabProps) {
   const endpoint = "/docker/containers/" + containerId
 
   const [method, setMethod] = useState<"GET" | "POST">("GET")
@@ -123,7 +123,6 @@ export function ContainerApiSimulator({ containerId }: ContainerApiSimulatorProp
                 readOnly
                 className="cursor-default"
               />
-              <p className="text-xs text-muted-foreground">Try /api/status or /api/metrics</p>
             </div>
             {method === "POST" && (
               <Form {...form}>
@@ -178,9 +177,9 @@ export function ContainerApiSimulator({ containerId }: ContainerApiSimulatorProp
               <TabsTrigger value="history">History</TabsTrigger>
             </TabsList>
             <TabsContent value="response">
-              <div className="rounded-md bg-muted p-4 font-mono text-sm h-80 overflow-auto">
-                {response ? response : "No response yet. Send a request to see the response."}
-              </div>
+              <SyntaxHighlighter language="json" style={oneDark} className="rounded-md bg-muted p-4 font-mono text-sm h-80 overflow-auto" showLineNumbers>
+                {response || "// No response yet. Send a request to see the response."}
+              </SyntaxHighlighter>
             </TabsContent>
             <TabsContent value="history">
               <div className="space-y-4 h-80 overflow-auto">
@@ -193,9 +192,9 @@ export function ContainerApiSimulator({ containerId }: ContainerApiSimulatorProp
                         </span>
                         <span className="text-xs text-muted-foreground">{item.timestamp}</span>
                       </div>
-                      <div className="bg-muted p-2 rounded font-mono text-xs overflow-auto max-h-32">
+                      <SyntaxHighlighter language="json" style={oneDark} className="bg-muted p-2 rounded font-mono text-xs overflow-auto max-h-32" showLineNumbers>
                         {item.response}
-                      </div>
+                      </SyntaxHighlighter>
                     </div>
                   ))
                 ) : (

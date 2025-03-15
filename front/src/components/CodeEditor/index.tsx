@@ -71,7 +71,7 @@ export default function CodeEditor({
         )
       }
       <Editor
-        theme="ayu-dark"
+        theme="one-dark"
         height="60vh"
         language="python"
         options={{

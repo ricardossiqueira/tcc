@@ -29,7 +29,7 @@ export function AppSidebar() {
     return urlList.some((url) => path === url);
   };
 
-  if (pathIncludes(["/"]) || !user) return <></>;
+  if (pathIncludes(["/", "login"]) || !user) return <></>;
 
   function NavItem({
     href,
@@ -111,24 +111,6 @@ export function AppSidebar() {
                   </NavItem>
                 </div>
               </div>
-
-              <div>
-                <div className="px-3 mb-2 text-xs font-semibold uppercase tracking-wider">
-                  Containers
-                </div>
-                <div className="space-y-1">
-                  <NavItem href="#" icon={Rocket}>
-                    Container name
-                  </NavItem>
-                  <NavItem href="#" icon={Rocket}>
-                    Container name
-                  </NavItem>
-                  <NavItem href="#" icon={Rocket}>
-                    Container name
-                  </NavItem>
-                </div>
-              </div>
-
             </div>
           </div>
 

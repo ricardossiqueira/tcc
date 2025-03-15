@@ -2,7 +2,7 @@
 import { ArrowLeft, Play, RefreshCw, Square, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { useQueryClient, useQuery, useMutation } from "@tanstack/react-query"
-import { useParams, usePathname } from "next/navigation"
+import { useParams } from "next/navigation"
 import { api } from "../../api/axios"
 import { getContainerDetails } from "../../api/containers"
 import { ContainerStatusBadge } from "../ContainerStatusBadge"
@@ -10,13 +10,23 @@ import Loading from "../Loading"
 import { Button } from "../ui/button"
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "../ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
-import { Chart } from "../Charts"
-import { ContainerApiSimulator } from "../ContainerAPISimulator"
+import { ContainerMetricsTab } from "./ContainerMetricsTab"
+import { ContainerApiSimulatorTab } from "./ContainerAPISimulatorTab"
+import { motion } from "framer-motion"
+import { ContainerDetailsTab } from "./ContainerDetailsTab"
 
+
+const TabsValue = {
+  METRICS: "METRICS",
+  API: "API",
+  DETAILS: "DETAILS",
+  LOGS: "LOGS",
+}
+
+const DefaultTab = TabsValue.METRICS
 
 export function ContainerDetails() {
   const { id } = useParams();
-  const path = usePathname();
 
   const queryClient = useQueryClient();
 
@@ -50,6 +60,10 @@ export function ContainerDetails() {
     return <Loading />;
   }
 
+  const motionInitial = { opacity: 0, y: 20 };
+  const motionAnimate = { opacity: 1, y: 0 };
+  const motionTransition = { duration: 0.5 };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -59,14 +73,14 @@ export function ContainerDetails() {
           </Link>
         </Button>
         <div>
-          <h2 className="text-2xl font-bold">{container.data.name}</h2>
+          <h2 className="text-2xl font-bold">{container.name}</h2>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span className="font-mono">{container.data.id.slice(0, 12)}</span>
-            <ContainerStatusBadge status={container.data.status} />
+            <span className="font-mono">{container.id.slice(0, 12)}</span>
+            <ContainerStatusBadge status={container.status} />
           </div>
         </div>
         <div className="ml-auto flex gap-2">
-          {container.data.status === "Up" ? (
+          {container.status === "Up" ? (
             <Button variant="outline" onClick={() => stopContainer()} isLoading={stopPending}>
               <Square className="mr-2 h-4 w-4" />
               Stop
@@ -89,98 +103,53 @@ export function ContainerDetails() {
         </div>
       </div>
 
-      <Tabs defaultValue="metrics">
+      <Tabs defaultValue={DefaultTab}>
         <TabsList>
-          <TabsTrigger value="metrics">Metrics</TabsTrigger>
-          <TabsTrigger value="api">API Simulator</TabsTrigger>
-          <TabsTrigger value="details">Details</TabsTrigger>
-          <TabsTrigger value="logs">Logs</TabsTrigger>
+          <TabsTrigger value={TabsValue.METRICS}>Metrics</TabsTrigger>
+          <TabsTrigger value={TabsValue.API}>API Simulator</TabsTrigger>
+          <TabsTrigger value={TabsValue.DETAILS}>Details</TabsTrigger>
+          <TabsTrigger value={TabsValue.LOGS}>Logs</TabsTrigger>
         </TabsList>
-        <TabsContent value="metrics">
-          {/* <ContainerMetrics containerId={container.id} /> */}
-          <Chart id={container.data.id} />
+        <TabsContent value={TabsValue.METRICS}>
+          <motion.div initial={motionInitial} animate={motionAnimate} transition={motionTransition} >
+            <ContainerMetricsTab id={container.id} />
+          </motion.div>
         </TabsContent>
-        <TabsContent value="api">
-          <ContainerApiSimulator containerId={container.data.id} />
+        <TabsContent value={TabsValue.API}>
+          <motion.div initial={motionInitial} animate={motionAnimate} transition={motionTransition} >
+            <ContainerApiSimulatorTab containerId={container.id} />
+          </motion.div>
         </TabsContent>
-        <TabsContent value="details">
-          <div className="grid gap-6 md:grid-cols-2">
+        <TabsContent value={TabsValue.DETAILS}>
+          <motion.div initial={motionInitial} animate={motionAnimate} transition={motionTransition} >
+            <ContainerDetailsTab containerId={container.id} />
+          </motion.div>
+        </TabsContent>
+        <TabsContent value={TabsValue.LOGS}>
+          <motion.div initial={motionInitial} animate={motionAnimate} transition={motionTransition} >
             <Card>
               <CardHeader>
-                <CardTitle>Container Information</CardTitle>
+                <CardTitle>Container Logs</CardTitle>
+                <CardDescription>Real-time logs from the container</CardDescription>
               </CardHeader>
               <CardContent>
-                <dl className="grid grid-cols-[1fr_2fr] gap-2 text-sm">
-                  <dt className="font-medium">ID:</dt>
-                  <dd className="font-mono">{container.data.id}</dd>
-
-                  <dt className="font-medium">Name:</dt>
-                  <dd>{container.data.name}</dd>
-
-                  <dt className="font-medium">Image:</dt>
-                  <dd>{container.data.image}</dd>
-
-                  <dt className="font-medium">Status:</dt>
-                  <dd>
-                    <ContainerStatusBadge status={container.data.status} />
-                  </dd>
-
-                  <dt className="font-medium">Created:</dt>
-                  <dd>{container.data.created}</dd>
-
-                  <dt className="font-medium">Ports:</dt>
-                  <dd>{container.data.port}</dd>
-                </dl>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Generation Details</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-medium mb-1">Prompt</h4>
-                    <div className="rounded-md bg-muted p-3 text-sm">
-                      {container.data.prompt || "No prompt information available"}
-                    </div>
-                  </div>
-
-                  <div>
-                    <h4 className="font-medium mb-1">Generation Code</h4>
-                    <div className="rounded-md bg-muted p-3 font-mono text-xs">
-                      {container.data.script || "No generation code available"}
-                    </div>
-                  </div>
+                <div className="bg-black text-green-400 font-mono text-sm p-4 rounded-md h-80 overflow-auto">
+                  <div>Starting container {container.id.slice(0, 8)}...</div>
+                  <div>Container started successfully</div>
+                  <div>Initializing services...</div>
+                  <div>Services initialized</div>
+                  <div>Listening on port {container.port || "None"}</div>
+                  <div>Ready to accept connections</div>
+                  {container.status === "Stopped" && (
+                    <>
+                      <div className="text-red-500">ERROR: Connection refused</div>
+                      <div className="text-red-500">ERROR: Service unavailable</div>
+                    </>
+                  )}
                 </div>
               </CardContent>
             </Card>
-          </div>
-        </TabsContent>
-        <TabsContent value="logs">
-          <Card>
-            <CardHeader>
-              <CardTitle>Container Logs</CardTitle>
-              <CardDescription>Real-time logs from the container</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="bg-black text-green-400 font-mono text-sm p-4 rounded-md h-80 overflow-auto">
-                <div>Starting container {container.data.id.slice(0, 8)}...</div>
-                <div>Container started successfully</div>
-                <div>Initializing services...</div>
-                <div>Services initialized</div>
-                <div>Listening on port {container.data.port || "None"}</div>
-                <div>Ready to accept connections</div>
-                {container.data.status === "Stopped" && (
-                  <>
-                    <div className="text-red-500">ERROR: Connection refused</div>
-                    <div className="text-red-500">ERROR: Service unavailable</div>
-                  </>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          </motion.div>
         </TabsContent>
       </Tabs>
     </div>
