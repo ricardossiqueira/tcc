@@ -1,6 +1,6 @@
 import SyntaxHighlighter from "react-syntax-highlighter";
 import { dark } from "react-syntax-highlighter/dist/esm/styles/hljs";
-import { IContainerDetails } from "../../api/containers";
+import { IContainerDetails, useGetContainerDetailsQuery } from "../../api/containers";
 import { ContainerStatusBadge } from "../ContainerStatusBadge";
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { useQueryClient } from "@tanstack/react-query";
@@ -11,7 +11,7 @@ interface ContainerDetailsTabProps {
 
 export function ContainerDetailsTab({ containerId }: ContainerDetailsTabProps) {
   const queryClient = useQueryClient();
-  const container = queryClient.getQueryData<IContainerDetails>(["getContainerDetails", containerId]);
+  const container = queryClient.getQueryData<IContainerDetails>(useGetContainerDetailsQuery(containerId).queryKey);
 
   return (
     <div className="grid gap-6 md:grid-cols-2">

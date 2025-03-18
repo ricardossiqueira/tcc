@@ -16,7 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { useQuery } from "@tanstack/react-query";
-import { getUserContainers } from "../../api/containers";
+import { useGetUserContainersQuery } from "../../api/containers";
 import { ChevronDown } from "lucide-react";
 import { Button } from "../ui/button";
 
@@ -24,11 +24,12 @@ export default function NavBreadcrumb() {
   const path = usePathname();
   const pathList = path.split("/").filter(Boolean);
   const { push } = useRouter();
+  const { queryKey: getUserContainersQueryKey, queryFn: getUserContainersQueryFn } = useGetUserContainersQuery();
 
   const { data: containers } = useQuery({
     refetchOnWindowFocus: true,
-    queryKey: ["getUserContainers"],
-    queryFn: () => getUserContainers(),
+    queryKey: getUserContainersQueryKey,
+    queryFn: getUserContainersQueryFn,
   });
 
   const containerName = (path: string) =>

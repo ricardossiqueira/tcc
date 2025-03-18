@@ -12,9 +12,16 @@ export interface IContainer {
   created: string;
 }
 
-export async function getUserContainers() {
+async function getUserContainers() {
   const res = await api.get<IContainer[]>("/docker/containers/list");
   return res.data;
+}
+
+const useGetUserContainersQuery = <T = IContainer[]>() => {
+  return {
+    queryKey: ["getUserContainers"],
+    queryFn: () => getUserContainers() as Promise<T>,
+  };
 }
 
 export interface IContainerDetails {
@@ -33,9 +40,18 @@ export interface IContainerDetails {
   updated: string;
 }
 
-export async function getContainerDetails(containerId: string) {
+async function getContainerDetails(containerId: string) {
   const res = await api.get<IContainerDetails>(
     `/docker/containers/${containerId}/details`,
   );
   return res.data;
 }
+
+const useGetContainerDetailsQuery = (containerId: string) => {
+  return {
+    queryKey: ["getContainerDetails", containerId],
+    queryFn: () => getContainerDetails(containerId),
+  };
+}
+
+export { useGetContainerDetailsQuery, useGetUserContainersQuery };

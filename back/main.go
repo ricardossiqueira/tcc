@@ -83,7 +83,7 @@ func main() {
 		//* List containers by status
 		e.Router.GET("/docker/containers/:status", cn.ListByStatus, apis.RequireRecordAuth())
 
-		//* Delete a container
+		//* Stop a container
 		e.Router.POST("/docker/containers/:id/stop", cn.StopContainer, middlewares.RequireContainerOwnership(app))
 
 		//* Start a container

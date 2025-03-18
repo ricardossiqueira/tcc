@@ -152,15 +152,9 @@ export function ContainerApiSimulatorTab({ containerId }: ContainerApiSimulatorT
           </div>
         </CardContent>
         <CardFooter>
-          <Button onClick={handleRequest} disabled={isLoading} className="w-full">
-            {isLoading ? (
-              <>Processing...</>
-            ) : (
-              <>
-                <Send className="mr-2 h-4 w-4" />
-                Send Request
-              </>
-            )}
+          <Button onClick={handleRequest} isLoading={isLoading} className="w-full">
+            <Send className="mr-2 h-4 w-4" />
+            Send Request
           </Button>
         </CardFooter>
       </Card>

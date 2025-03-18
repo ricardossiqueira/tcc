@@ -3,27 +3,82 @@
 import { useState } from "react"
 import Link from "next/link"
 import { ArrowUpDown, MoreHorizontal, Play, RefreshCw, Square, Trash2 } from "lucide-react"
-import { useRouter } from "next/navigation"
-import { useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { toDate } from "date-fns"
-import { IContainer, getUserContainers } from "../../api/containers"
+import { IContainer, useGetUserContainersQuery } from "../../api/containers"
 import { ContainerStatusBadge } from "../ContainerStatusBadge"
 import Loading from "../Loading"
 import { Button } from "../ui/button"
 import { TableHeader, TableRow, TableHead, TableBody, TableCell, Table } from "../ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "../ui/dropdown-menu"
+import { api } from "../../api/axios"
 
+interface IContainerList extends IContainer {
+  isLoading?: boolean;
+}
 
 export default function ContainerList() {
   // const { containers, startContainer, stopContainer } = useContainers()
+  const queryClient = useQueryClient();
   const [sortField, setSortField] = useState<keyof IContainer>("name")
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
+  const { queryKey: getUserContainersQueryKey, queryFn: getUserContainersQueryFn } = useGetUserContainersQuery<IContainerList[]>();
 
   const { data: containers, isLoading } = useQuery({
     refetchOnWindowFocus: true,
-    queryKey: ["getUserContainers"],
-    queryFn: () => getUserContainers(),
-    refetchInterval: 5000,
+    queryKey: getUserContainersQueryKey,
+    queryFn: getUserContainersQueryFn,
+  });
+
+
+  const startContainerMutation = useMutation({
+    mutationFn: (id: string) => api.post(`/docker/containers/${id}/start`),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: getUserContainersQueryKey })
+
+      const previousData = queryClient.getQueryData(getUserContainersQueryKey)
+
+      queryClient.setQueryData(getUserContainersQueryKey, (oldData: IContainer[]) =>
+        oldData.map(container =>
+          container.id === id
+            ? { ...container, isLoading: true }
+            : container
+        )
+      )
+
+      return { previousData, loadingId: id }
+    },
+    onError: (err, id, context) => {
+      queryClient.setQueryData(getUserContainersQueryKey, context?.previousData)
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: getUserContainersQueryKey })
+    },
+  });
+
+  const stopContainerMutation = useMutation({
+    mutationFn: (id: string) => api.post(`/docker/containers/${id}/stop`),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: getUserContainersQueryKey })
+
+      const previousData = queryClient.getQueryData(getUserContainersQueryKey)
+
+      queryClient.setQueryData(getUserContainersQueryKey, (oldData: IContainer[]) =>
+        oldData.map(container =>
+          container.id === id
+            ? { ...container, isLoading: true }
+            : container
+        )
+      )
+
+      return { previousData, loadingId: id }
+    },
+    onError: (err, id, context) => {
+      queryClient.setQueryData(getUserContainersQueryKey, context?.previousData)
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: getUserContainersQueryKey })
+    },
   });
 
   if (isLoading) {
@@ -123,17 +178,18 @@ export default function ContainerList() {
                     <Button
                       className="hover:bg-red-600 cursor-pointer"
                       variant="outline"
-                      size="icon"
-                      onClick={() => { }}
+                      onClick={() => stopContainerMutation.mutate(container.id)}
+                      isLoading={container?.isLoading}
                       title="Stop Container"
                     >
                       <Square className="h-4 w-4" />
                     </Button>
                   ) : (
                     <Button
+                      className="hover:bg-green-600 cursor-pointer"
                       variant="outline"
-                      size="icon"
-                      onClick={() => { }}
+                      onClick={() => startContainerMutation.mutate(container.id)}
+                      isLoading={container?.isLoading}
                       title="Start Container"
                     >
                       <Play className="h-4 w-4" />

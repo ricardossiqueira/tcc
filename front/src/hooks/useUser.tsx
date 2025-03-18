@@ -80,7 +80,7 @@ export const UserProvider = ({
   children,
 }: {
   children: ReactNode;
-}): JSX.Element => {
+}) => {
   const [user, setUser] = useState<CachedUserProperties | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | undefined>(undefined);

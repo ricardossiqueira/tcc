@@ -11,10 +11,7 @@ import {
   CardTitle,
 } from "../ui/card";
 import { useQuery } from "@tanstack/react-query";
-import {
-  getComputedSatsByContainerId,
-  getStatsByContainerId,
-} from "../../api/containerStats";
+import { useGetComputedStatsByContainerIdQuery, useGetStatsByContainerIdQuery } from "../../api/containerStats";
 import {
   ChartConfig,
   ChartContainer,
@@ -26,17 +23,21 @@ export interface ContainerMetricsTabProps {
   id: string;
 }
 
-export function ContainerMetricsTab(props: ContainerMetricsTabProps) {
+export function ContainerMetricsTab({ id }: ContainerMetricsTabProps) {
+  const { queryKey: getComputedStatsByContainerIdQueryKey, queryFn: getComputedStatsByContainerIdQueryFn } = useGetComputedStatsByContainerIdQuery(id);
+  const { queryKey: getStatsByContainerIdQueryKey, queryFn: getStatsByContainerIdQueryFn } = useGetStatsByContainerIdQuery(id);
+
+
   const { data: containerStats, isLoading } = useQuery({
     refetchOnWindowFocus: true,
-    queryKey: ["getContainerDetails", props.id, "getStatsByContainerId"],
-    queryFn: () => getStatsByContainerId(props.id),
+    queryKey: getStatsByContainerIdQueryKey,
+    queryFn: getStatsByContainerIdQueryFn,
   });
 
   const { data: computedContainerStats } = useQuery({
     refetchOnWindowFocus: true,
-    queryKey: ["getContainerDetails", props.id, "getComputedSatsByContainerId"],
-    queryFn: () => getComputedSatsByContainerId(props.id),
+    queryKey: getComputedStatsByContainerIdQueryKey,
+    queryFn: getComputedStatsByContainerIdQueryFn,
   });
 
   if (isLoading) {

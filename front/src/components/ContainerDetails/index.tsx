@@ -4,7 +4,7 @@ import Link from "next/link"
 import { useQueryClient, useQuery, useMutation } from "@tanstack/react-query"
 import { useParams } from "next/navigation"
 import { api } from "../../api/axios"
-import { getContainerDetails } from "../../api/containers"
+import { useGetContainerDetailsQuery } from "../../api/containers"
 import { ContainerStatusBadge } from "../ContainerStatusBadge"
 import Loading from "../Loading"
 import { Button } from "../ui/button"
@@ -23,17 +23,17 @@ const TabsValue = {
   LOGS: "LOGS",
 }
 
-const DefaultTab = TabsValue.METRICS
+const DefaultTab = TabsValue.DETAILS
 
 export function ContainerDetails() {
   const { id } = useParams();
-
   const queryClient = useQueryClient();
+  const { queryKey: getContainerDetailsQueryKey, queryFn: getContainerDetailsQueryFn } = useGetContainerDetailsQuery(id as string);
 
   const { data: container, isLoading } = useQuery({
     refetchOnWindowFocus: true,
-    queryKey: ["getContainerDetails", id],
-    queryFn: () => getContainerDetails(id as string),
+    queryKey: getContainerDetailsQueryKey,
+    queryFn: getContainerDetailsQueryFn,
   });
 
   const { mutateAsync: startContainer, isPending: startPending } = useMutation({
@@ -42,7 +42,7 @@ export function ContainerDetails() {
     },
     onSuccess: () =>
       queryClient.invalidateQueries({
-        queryKey: ["getContainerDetails", id as string],
+        queryKey: getContainerDetailsQueryKey,
       }),
   });
 
@@ -52,7 +52,7 @@ export function ContainerDetails() {
     },
     onSuccess: () =>
       queryClient.invalidateQueries({
-        queryKey: ["getContainerDetails", id as string],
+        queryKey: getContainerDetailsQueryKey,
       }),
   });
 

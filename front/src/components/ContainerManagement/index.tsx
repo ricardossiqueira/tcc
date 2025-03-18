@@ -13,16 +13,16 @@ import {
 import { Button } from "../ui/button";
 import { ReloadIcon } from "@radix-ui/react-icons";
 import React, { useState } from "react";
-import { getUserContainers } from "../../api/containers";
+import { useGetUserContainersQuery } from "../../api/containers";
 
 export function ContainerManagement() {
   const [selected, setSelected] = useState("");
+  const { queryKey: getUserContainersQueryKey, queryFn: getUserContainersQueryFn } = useGetUserContainersQuery();
 
   const { data: containers, refetch } = useQuery({
     refetchOnWindowFocus: true,
-    queryKey: ["getUserContainers"],
-    queryFn: () => getUserContainers(),
-    refetchInterval: 5000,
+    queryKey: getUserContainersQueryKey,
+    queryFn: getUserContainersQueryFn,
   });
 
   return (
@@ -51,7 +51,7 @@ export function ContainerManagement() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {containers?.data.map((container) => {
+            {containers?.map((container) => {
               return (
                 <TableRow
                   key={container.id}

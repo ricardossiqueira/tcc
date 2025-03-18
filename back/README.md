@@ -14,3 +14,4 @@
  - [ ] Add human readable id and short description to containers
  - [ ] Docker pull image if image is not found
  - [ ] Possibility to select different models?
+ - [ ] Create container stats on container creation

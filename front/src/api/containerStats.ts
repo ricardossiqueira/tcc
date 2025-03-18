@@ -10,11 +10,18 @@ export interface IContainerStats {
   updated: string;
 }
 
-export async function getStatsByContainerId(containerId: string) {
+async function getStatsByContainerId(containerId: string) {
   const res = await api.get<IContainerStats[]>(
     `/docker/containers/${containerId}/stats`,
   );
   return res;
+}
+
+const useGetStatsByContainerIdQuery = (containerId: string) => {
+  return {
+    queryKey: ["getContainerDetails", containerId, "getStatsByContainerId"],
+    queryFn: () => getStatsByContainerId(containerId),
+  };
 }
 
 export interface IComputedContainerStats {
@@ -24,9 +31,18 @@ export interface IComputedContainerStats {
   avg_stop_duration: number;
 }
 
-export async function getComputedSatsByContainerId(containerId: string) {
+async function getComputedSatsByContainerId(containerId: string) {
   const res = await api.get<IComputedContainerStats>(
     `/docker/containers/${containerId}/computed-stats`,
   );
   return res;
 }
+
+const useGetComputedStatsByContainerIdQuery = (containerId: string) => {
+  return {
+    queryKey: ["getContainerDetails", containerId, "getComputedSatsByContainerId"],
+    queryFn: () => getComputedSatsByContainerId(containerId),
+  };
+}
+
+export { useGetComputedStatsByContainerIdQuery, useGetStatsByContainerIdQuery };
