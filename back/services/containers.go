@@ -353,6 +353,20 @@ func (cn Container) Notifications(c echo.Context) error {
 	}
 }
 
+func (cn *Container) TestSSE(c echo.Context) error {
+	user := c.Get(apis.ContextAuthRecordKey).(*models.Record)
+	cn.c <- sse.Notification{
+		ID:          uuid.New().String(),
+		Type:        "success",
+		Data:        "test",
+		Message:     "Test SSE",
+		Timestamp:   time.Now(),
+		UserID:      user.Id,
+		ContainerID: "",
+	}
+	return c.JSON(http.StatusOK, nil)
+}
+
 func (cn Container) Deploy(e *core.ModelEvent) error {
 	script := types.ScriptDTO{}
 

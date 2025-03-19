@@ -6,6 +6,7 @@ import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
 import { useSSE } from "../../hooks/useSSE";
 import useUser from "../../hooks/useUser";
+import { Button } from "../ui/button";
 
 function Notifications() {
   const { user } = useUser();
@@ -55,7 +56,13 @@ function Notifications() {
           transition={{ duration: 0.5 }}
           className="z-10"
         >
-          <Bell className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600 dark:text-gray-300" />
+          <Button
+            variant="ghost"
+            className="rounded-full"
+            onClick={() => void api.get("/sse/test")}
+          >
+            <Bell className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600 dark:text-gray-300" />
+          </Button>
         </motion.div>
       </AnimatePresence>
     </div>

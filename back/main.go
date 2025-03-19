@@ -43,6 +43,9 @@ func main() {
 		// SSE
 		e.Router.GET("/sse/notifications/:userId", cn.Notifications, apis.LoadAuthContext(app))
 
+		// Test SSE
+		e.Router.GET("/sse/test", cn.TestSSE, apis.LoadAuthContext(app))
+
 		//* Create a new container
 		e.Router.POST("/docker/containers/new", cn.Create, apis.LoadAuthContext(app))
 
