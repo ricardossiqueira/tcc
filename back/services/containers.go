@@ -2,10 +2,12 @@ package services
 
 import (
 	"back/docker"
+	"back/sse"
 	"back/types"
 	"back/utils"
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -13,10 +15,13 @@ import (
 
 	dockerTypes "github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/namesgenerator"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/apis"
+	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/forms"
 	"github.com/pocketbase/pocketbase/models"
 )
@@ -25,13 +30,15 @@ type Container struct {
 	app       *pocketbase.PocketBase
 	DockerCtx context.Context
 	DockerCli *client.Client
+	c         chan sse.Notification
 }
 
-func NewContainer(app *pocketbase.PocketBase, dockerCtx context.Context, dockerCli *client.Client) *Container {
+func NewContainer(app *pocketbase.PocketBase, dockerCtx context.Context, dockerCli *client.Client, c chan sse.Notification) *Container {
 	return &Container{
 		app:       app,
 		DockerCtx: dockerCtx,
 		DockerCli: dockerCli,
+		c:         c,
 	}
 }
 
@@ -81,7 +88,6 @@ func (cn Container) CreateStats(payload types.CreateContainerStatsDTO) error {
 
 // * List all containers
 func (cn Container) List(c echo.Context) error {
-
 	containers := []types.ContainerListDTO{}
 
 	user := c.Get(apis.ContextAuthRecordKey).(*models.Record)
@@ -118,6 +124,7 @@ func (cn Container) ListByStatus(c echo.Context) error {
 func (cn Container) StopContainer(c echo.Context) error {
 	containerId := c.PathParam("id")
 	started_at := time.Now().UnixMilli()
+	user := c.Get(apis.ContextAuthRecordKey).(*models.Record)
 
 	container, err := cn.GetContainerById(containerId)
 	if err != nil {
@@ -147,6 +154,16 @@ func (cn Container) StopContainer(c echo.Context) error {
 		cn.app.Logger().Error(err.Error())
 	}
 
+	cn.c <- sse.Notification{
+		ID:          uuid.New().String(),
+		Type:        "success",
+		Data:        containerId,
+		Message:     fmt.Sprintf("Container %s stopped.", container.Name),
+		Timestamp:   time.Now(),
+		UserID:      user.Id,
+		ContainerID: containerId,
+	}
+
 	return c.JSON(http.StatusOK, nil)
 }
 
@@ -154,6 +171,7 @@ func (cn Container) StopContainer(c echo.Context) error {
 func (cn Container) StartContainer(c echo.Context) error {
 	containerId := c.PathParam("id")
 	started_at := time.Now().UnixMilli()
+	user := c.Get(apis.ContextAuthRecordKey).(*models.Record)
 
 	container, err := cn.GetContainerById(containerId)
 	if err != nil {
@@ -209,6 +227,16 @@ func (cn Container) StartContainer(c echo.Context) error {
 	duration := time.Now().UnixMilli() - started_at
 	if err := cn.CreateStats(types.CreateContainerStatsDTO{Container: containerId, StartDuration: duration}); err != nil {
 		cn.app.Logger().Error(err.Error())
+	}
+
+	cn.c <- sse.Notification{
+		ID:          uuid.New().String(),
+		Type:        "success",
+		Data:        containerId,
+		Message:     fmt.Sprintf("Container %s started.", container.Name),
+		Timestamp:   time.Now(),
+		UserID:      user.Id,
+		ContainerID: containerId,
 	}
 
 	return c.JSON(http.StatusOK, nil)
@@ -278,4 +306,111 @@ func (cn Container) Details(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, container)
+}
+
+func (cn Container) Notifications(c echo.Context) error {
+	w := c.Response()
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+
+	ticker := time.NewTicker(5 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-c.Request().Context().Done():
+			return nil
+
+		case eventData := <-cn.c:
+			jsonData, err := json.Marshal(eventData)
+			if err != nil {
+				continue
+			}
+
+			event := sse.Event{
+				Data: append(jsonData, '\n', '\n'), // Corrige o formato SSE
+			}
+
+			if err := event.MarshalTo(w); err != nil {
+				return err
+			}
+
+			w.Flush()
+		}
+	}
+}
+
+func (cn Container) Deploy(e *core.ModelEvent) error {
+	script := types.ScriptDTO{}
+
+	//GET script
+	cn.app.Dao().DB().
+		Select("*").
+		From("scripts").
+		Where(dbx.NewExp("id = {:id}", dbx.Params{"id": e.Model.GetId()})).
+		One(&script)
+
+	//Parse script to .tar
+	var tar bytes.Buffer
+	if err := utils.ScriptToTar(&tar, script.Script); err != nil {
+		cn.app.Logger().Error(err.Error())
+		return err
+	}
+
+	port, err := AllocatePort()
+	if err != nil {
+		cn.app.Logger().Error(err.Error())
+		return err
+	}
+
+	resp, err := docker.CreateContainer(cn.app, cn.DockerCli, cn.DockerCtx, tar, port)
+	if err != nil {
+		cn.app.Logger().Error(err.Error())
+		return err
+	}
+
+	//Create container
+	collection, err := cn.app.Dao().FindCollectionByNameOrId("containers")
+	if err != nil {
+		cn.app.Logger().Error(err.Error())
+		return err
+	}
+
+	record := models.NewRecord(collection)
+	form := forms.NewRecordUpsert(cn.app, record)
+
+	containerName := namesgenerator.GetRandomName(0)
+
+	form.LoadData(map[string]any{
+		"docker_id": resp.ID,
+		"status":    "Up",
+		"image":     docker.GetImage(),
+		"script":    script.Id,
+		"port":      port,
+		"owner":     script.Owner,
+		"name":      containerName,
+	})
+
+	if err := form.Submit(); err != nil {
+		cn.app.Logger().Error(err.Error())
+		return err
+	}
+
+	if err := cn.DockerCli.ContainerStart(cn.DockerCtx, resp.ID, dockerTypes.StartOptions{}); err != nil {
+		cn.app.Logger().Error(err.Error())
+		return err
+	}
+
+	cn.c <- sse.Notification{
+		ID:          uuid.New().String(),
+		Type:        "created",
+		Data:        resp.ID,
+		Message:     fmt.Sprintf("Container %s started.", containerName),
+		Timestamp:   time.Now(),
+		UserID:      script.Owner,
+		ContainerID: record.Id,
+	}
+
+	return nil
 }

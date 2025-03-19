@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://srv756493.hstgr.cloud",
+  baseURL: "http://localhost:8090",
   timeout: 10000 * 30,
 });
 

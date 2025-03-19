@@ -7,6 +7,7 @@ toolchain go1.23.3
 require (
 	github.com/docker/docker v27.3.1+incompatible
 	github.com/docker/go-connections v0.5.0
+	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
 	github.com/labstack/echo/v5 v5.0.0-20230722203903-ec5b858dab61
 	github.com/openai/openai-go v0.1.0-alpha.62
@@ -55,7 +56,6 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang-jwt/jwt/v4 v4.5.1 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/googleapis/gax-go/v2 v2.13.0 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
