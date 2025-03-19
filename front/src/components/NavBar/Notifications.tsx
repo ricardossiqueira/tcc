@@ -5,16 +5,17 @@ import { AnimatePresence, motion } from "framer-motion";
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
 import { useSSE } from "../../hooks/useSSE";
+import useUser from "../../hooks/useUser";
 
 function Notifications() {
-  const event = useSSE(`${api.getUri()}/sse/notifications`);
+  const { user } = useUser();
+  const event = useSSE(`${api.getUri()}/sse/notifications/${user.id}`);
   const { push } = useRouter();
 
   useEffect(() => {
     if (event) {
       switch (event.type) {
         case "success":
-          console.log("Evento de sucesso:", event.data);
           break;
         case "created":
           push(`/app/containers/${event.container_id}`);

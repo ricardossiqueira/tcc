@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import useUser from "./useUser";
 
 type EventType = "success" | "created";
 
@@ -12,30 +13,62 @@ interface Event {
   container_id: string;
 }
 
-const useSSE = (url: string): Event => {
+const MAX_RETRIES = 5;
+const INITIAL_RETRY_DELAY = 1000;
+
+const useSSE = (url: string): Event | undefined => {
   const [lastEvent, setLastEvent] = useState<Event | undefined>();
+  const [retryCount, setRetryCount] = useState(0);
+
+  const {
+    user: { token },
+  } = useUser();
+
+  const fullUrl = `${url}?token=${encodeURIComponent(token)}`;
 
   useEffect(() => {
-    const eventSource = new EventSource(url);
+    let eventSource: EventSource | null = null;
+    let retryTimeout: NodeJS.Timeout;
 
-    eventSource.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        setLastEvent(data);
-      } catch (error) {
-        console.log("Erro ao parsear JSON:", error);
-      }
+    const connect = () => {
+      eventSource = new EventSource(fullUrl);
+
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          setLastEvent(data);
+          setRetryCount(0); // Resetar tentativas após uma conexão bem-sucedida
+        } catch (error) {
+          console.log("Erro ao parsear JSON:", error);
+        }
+      };
+
+      eventSource.onerror = (error) => {
+        console.log("Erro na conexão SSE:", error);
+        eventSource?.close();
+
+        if (retryCount < MAX_RETRIES) {
+          const retryDelay = INITIAL_RETRY_DELAY * 2 ** retryCount; // Exponencial backoff
+          console.log(
+            `Tentando reconectar em ${retryDelay / 1000} segundos...`,
+          );
+          retryTimeout = setTimeout(connect, retryDelay);
+          setRetryCount((prev) => prev + 1);
+        } else {
+          console.log(
+            "Número máximo de tentativas atingido. Conexão encerrada.",
+          );
+        }
+      };
     };
 
-    eventSource.onerror = (error) => {
-      console.log("Erro na conexão SSE:", error);
-      eventSource.close();
-    };
+    connect();
 
     return () => {
-      eventSource.close();
+      eventSource?.close();
+      clearTimeout(retryTimeout);
     };
-  }, [url]);
+  }, [url, token]);
 
   return lastEvent;
 };

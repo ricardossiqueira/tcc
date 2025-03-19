@@ -41,7 +41,7 @@ func main() {
 		e.Router.GET("/*", apis.StaticDirectoryHandler(os.DirFS("./pb_public"), false))
 
 		// SSE
-		e.Router.GET("/sse/notifications", cn.Notifications, apis.LoadAuthContext(app))
+		e.Router.GET("/sse/notifications/:userId", cn.Notifications, apis.LoadAuthContext(app))
 
 		//* Create a new container
 		e.Router.POST("/docker/containers/new", cn.Create, apis.LoadAuthContext(app))

@@ -24,6 +24,8 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/forms"
 	"github.com/pocketbase/pocketbase/models"
+	"github.com/pocketbase/pocketbase/tools/security"
+	"github.com/spf13/cast"
 )
 
 type Container struct {
@@ -310,12 +312,15 @@ func (cn Container) Details(c echo.Context) error {
 
 func (cn Container) Notifications(c echo.Context) error {
 	w := c.Response()
+	userId := c.PathParam("userId")
+	userToken := c.QueryParam("token")
+
+	claims, _ := security.ParseUnverifiedJWT(userToken)
+	jwtUserId := cast.ToString(claims["id"])
+
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
-
-	ticker := time.NewTicker(5 * time.Second)
-	defer ticker.Stop()
 
 	for {
 		select {
@@ -323,13 +328,20 @@ func (cn Container) Notifications(c echo.Context) error {
 			return nil
 
 		case eventData := <-cn.c:
+			if jwtUserId != userId {
+				continue
+			}
+
 			jsonData, err := json.Marshal(eventData)
 			if err != nil {
 				continue
 			}
 
+			if eventData.UserID != userId {
+				continue
+			}
 			event := sse.Event{
-				Data: append(jsonData, '\n', '\n'), // Corrige o formato SSE
+				Data: append(jsonData, '\n', '\n'), // Fixes the SSE format
 			}
 
 			if err := event.MarshalTo(w); err != nil {
