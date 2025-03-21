@@ -16,12 +16,7 @@ import { Textarea } from "../ui/textarea";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Label } from "../ui/label";
-import {
-  Mutation,
-  MutationState,
-  useMutation,
-  useMutationState,
-} from "@tanstack/react-query";
+import { useMutation, useMutationState } from "@tanstack/react-query";
 import { api } from "../../api/axios";
 import { useForm } from "react-hook-form";
 import {
@@ -41,7 +36,6 @@ import SyntaxHighlighter from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { useToast } from "../../hooks/useToast";
 import dayjs from "dayjs";
-import { AxiosResponse } from "axios";
 
 interface ContainerApiSimulatorTabProps {
   containerId: string;
