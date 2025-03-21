@@ -1,25 +1,50 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Send } from "lucide-react"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../ui/card"
-import { Button } from "../ui/button"
-import { Input } from "../ui/input"
-import { Textarea } from "../ui/textarea"
-import { RadioGroup, RadioGroupItem } from "../ui/radio-group"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
-import { Label } from "../ui/label"
-import { useMutation } from "@tanstack/react-query"
-import { api } from "../../api/axios"
-import { useForm } from "react-hook-form"
-import { postRequestRawJSONSchema, PostRequestRawJSONSchema } from "../../zod/postRequestPayload"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form"
-import SyntaxHighlighter from "react-syntax-highlighter"
-import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism"
+import { useEffect, useState } from "react";
+import { ClipboardIcon, Send } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "../ui/card";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Textarea } from "../ui/textarea";
+import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
+import { Label } from "../ui/label";
+import {
+  Mutation,
+  MutationState,
+  useMutation,
+  useMutationState,
+} from "@tanstack/react-query";
+import { api } from "../../api/axios";
+import { useForm } from "react-hook-form";
+import {
+  postRequestRawJSONSchema,
+  PostRequestRawJSONSchema,
+} from "../../zod/postRequestPayload";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "../ui/form";
+import SyntaxHighlighter from "react-syntax-highlighter";
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { useToast } from "../../hooks/useToast";
+import dayjs from "dayjs";
+import { AxiosResponse } from "axios";
 
 interface ContainerApiSimulatorTabProps {
-  containerId: string
+  containerId: string;
 }
 
 interface HistoryItem {
@@ -29,53 +54,65 @@ interface HistoryItem {
   timestamp: string;
 }
 
-export function ContainerApiSimulatorTab({ containerId }: ContainerApiSimulatorTabProps) {
-  const endpoint = "/docker/containers/" + containerId
+export function ContainerApiSimulatorTab({
+  containerId,
+}: ContainerApiSimulatorTabProps) {
+  const path = api.defaults.baseURL;
+  const endpoint = path + "/docker/containers/" + containerId;
+  const mutationKey = ["container", containerId];
 
-  const [method, setMethod] = useState<"GET" | "POST">("GET")
-  const [response, setResponse] = useState("")
-  const [history, setHistory] = useState<HistoryItem[]>([])
+  const [method, setMethod] = useState<"GET" | "POST">("GET");
+  const [response, setResponse] = useState("");
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const { toast } = useToast();
 
-  function processApiSuccess(
-    method: string,
-  ) {
-    return ({ data }) => {
-      setResponse(JSON.stringify(data, null, 2))
-      setHistory((prev) => [
-        {
-          method,
-          endpoint,
-          response: JSON.stringify(data, null, 2),
-          timestamp: new Date().toLocaleTimeString(),
-        },
-        ...prev.slice(0, 4),
-      ])
-    }
+  function copyToClipboard(text: string) {
+    navigator.clipboard.writeText(text);
+    toast({
+      title: "Copied to clipboard",
+      description: "The endpoint has been copied to your clipboard.",
+      variant: "success",
+    });
+  }
+
+  function processApiSuccess({ data, headers, config }) {
+    setResponse(JSON.stringify(data, null, 2));
+    setHistory((prev) => [
+      {
+        endpoint: config?.url,
+        method: config?.method?.toUpperCase(),
+        response: JSON.stringify(data, null, 2),
+        timestamp: dayjs(headers?.["Date"])?.format("MMM, DD HH:mm:ss"),
+      },
+      ...prev.slice(0, 4),
+    ]);
   }
 
   const { mutate: mutateGET, isPending: isGETPending } = useMutation({
     mutationFn: () => {
-      return api.get(`/docker/containers/${containerId}`)
+      return api.get(`/docker/containers/${containerId}`);
     },
-    onSuccess: processApiSuccess(method)
-  })
+    onSuccess: processApiSuccess,
+    mutationKey,
+  });
 
   const { mutate: mutatePOST, isPending: isPOSTPending } = useMutation({
     mutationFn: (payload) => {
-      return api.post(`/docker/containers/${containerId}`, payload)
+      return api.post(`/docker/containers/${containerId}`, payload);
     },
-    onSuccess: processApiSuccess(method)
-  })
+    onSuccess: processApiSuccess,
+    mutationKey,
+  });
 
   const form = useForm<PostRequestRawJSONSchema>({
     resolver: zodResolver(postRequestRawJSONSchema),
     defaultValues: {
       payload: "",
-    }
-  })
+    },
+  });
 
   function onSubmit(values: PostRequestRawJSONSchema) {
-    mutatePOST(JSON.parse(values.payload))
+    mutatePOST(JSON.parse(values.payload));
   }
 
   const handleRequest = () => {
@@ -84,16 +121,27 @@ export function ContainerApiSimulatorTab({ containerId }: ContainerApiSimulatorT
     } else if (method === "POST") {
       form.handleSubmit(onSubmit)();
     }
-  }
+  };
 
-  const isLoading = isGETPending || isPOSTPending
+  const data = useMutationState({
+    filters: { mutationKey },
+    select: (mutation) => mutation.state.data,
+  });
+
+  useEffect(() => {
+    data && data.forEach(processApiSuccess);
+  }, []);
+
+  const isLoading = isGETPending || isPOSTPending;
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
       <Card className="h-fit">
         <CardHeader>
           <CardTitle>API Request</CardTitle>
-          <CardDescription>Simulate API requests to the container</CardDescription>
+          <CardDescription>
+            Simulate API requests to the container
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -105,24 +153,45 @@ export function ContainerApiSimulatorTab({ containerId }: ContainerApiSimulatorT
                 onValueChange={(value) => setMethod(value as "GET" | "POST")}
               >
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="GET" id="get" className="cursor-pointer" />
-                  <Label htmlFor="get" className="cursor-pointer">GET</Label>
+                  <RadioGroupItem
+                    value="GET"
+                    id="get"
+                    className="cursor-pointer"
+                  />
+                  <Label htmlFor="get" className="cursor-pointer">
+                    GET
+                  </Label>
                 </div>
                 <div className="flex items-center space-x-2 ml-4">
-                  <RadioGroupItem value="POST" id="post" className="cursor-pointer" />
-                  <Label htmlFor="post" className="cursor-pointer">POST</Label>
+                  <RadioGroupItem
+                    value="POST"
+                    id="post"
+                    className="cursor-pointer"
+                  />
+                  <Label htmlFor="post" className="cursor-pointer">
+                    POST
+                  </Label>
                 </div>
               </RadioGroup>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="endpoint">Endpoint</Label>
-              <Input
-                id="endpoint"
-                value={endpoint}
-                readOnly
-                className="cursor-default"
-              />
+              <div className="flex items-center gap-2">
+                <Input
+                  id="endpoint"
+                  value={endpoint}
+                  readOnly
+                  className="cursor-default"
+                />
+                <Button
+                  variant="outline"
+                  onClick={() => copyToClipboard(endpoint)}
+                  className="cursor-pointer"
+                >
+                  <ClipboardIcon />
+                </Button>
+              </div>
             </div>
             {method === "POST" && (
               <Form {...form}>
@@ -152,7 +221,11 @@ export function ContainerApiSimulatorTab({ containerId }: ContainerApiSimulatorT
           </div>
         </CardContent>
         <CardFooter>
-          <Button onClick={handleRequest} isLoading={isLoading} className="w-full">
+          <Button
+            onClick={handleRequest}
+            isLoading={isLoading}
+            className="w-full"
+          >
             <Send className="mr-2 h-4 w-4" />
             Send Request
           </Button>
@@ -171,28 +244,46 @@ export function ContainerApiSimulatorTab({ containerId }: ContainerApiSimulatorT
               <TabsTrigger value="history">History</TabsTrigger>
             </TabsList>
             <TabsContent value="response">
-              <SyntaxHighlighter language="json" style={oneDark} className="rounded-md bg-muted p-4 font-mono text-sm h-80 overflow-auto" showLineNumbers>
-                {response || "// No response yet. Send a request to see the response."}
+              <SyntaxHighlighter
+                language="json"
+                style={oneDark}
+                className="rounded-md bg-muted p-4 font-mono text-sm h-80 overflow-auto"
+                showLineNumbers
+              >
+                {response ||
+                  "// No response yet. Send a request to see the response."}
               </SyntaxHighlighter>
             </TabsContent>
             <TabsContent value="history">
               <div className="space-y-4 h-80 overflow-auto">
                 {history.length > 0 ? (
                   history.map((item, index) => (
-                    <div key={index} className="rounded-md border border-border p-3 text-sm">
+                    <div
+                      key={index}
+                      className="rounded-md border border-border p-3 text-sm"
+                    >
                       <div className="flex justify-between mb-2">
                         <span className="font-medium">
                           {item.method} {item.endpoint}
                         </span>
-                        <span className="text-xs text-muted-foreground">{item.timestamp}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {item.timestamp}
+                        </span>
                       </div>
-                      <SyntaxHighlighter language="json" style={oneDark} className="bg-muted p-2 rounded font-mono text-xs overflow-auto max-h-32" showLineNumbers>
+                      <SyntaxHighlighter
+                        language="json"
+                        style={oneDark}
+                        className="bg-muted p-2 rounded font-mono text-xs overflow-auto max-h-32"
+                        showLineNumbers
+                      >
                         {item.response}
                       </SyntaxHighlighter>
                     </div>
                   ))
                 ) : (
-                  <div className="text-center text-muted-foreground py-8">No request history yet</div>
+                  <div className="text-center text-muted-foreground py-8">
+                    No request history yet
+                  </div>
                 )}
               </div>
             </TabsContent>
@@ -200,6 +291,5 @@ export function ContainerApiSimulatorTab({ containerId }: ContainerApiSimulatorT
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
-

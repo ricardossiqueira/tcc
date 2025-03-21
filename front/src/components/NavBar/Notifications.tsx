@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { api } from "../../api/axios";
 import { Bell } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -8,24 +7,38 @@ import { useSSE } from "../../hooks/useSSE";
 import useUser from "../../hooks/useUser";
 import { Button } from "../ui/button";
 
+interface NotificationCreatedProps {
+  timestamp: string;
+  containerId: string;
+}
+
+function NotificationCreated({
+  timestamp,
+  containerId,
+}: NotificationCreatedProps) {
+  const { push } = useRouter();
+  return (
+    <div
+      className="p-[2px] bg-gradient-to-r from-purple-400 to-pink-600 rounded-md cursor-pointer"
+      onClick={() => {
+        push(`/app/containers/${containerId}`);
+      }}
+    >
+      <div className="flex items-center gap-2">
+        <div className="bg-muted rounded-md py-1 px-4 text-right flex flex-col">
+          <span className="text-xs text-zinc-300">
+            {dayjs(timestamp).format("MMM, DD HH:mm")}
+          </span>
+          <span className="text-sm">Container created successfully!</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Notifications() {
   const { user } = useUser();
   const event = useSSE(`${api.getUri()}/sse/notifications/${user.id}`);
-  const { push } = useRouter();
-
-  useEffect(() => {
-    if (event) {
-      switch (event.type) {
-        case "success":
-          break;
-        case "created":
-          push(`/app/containers/${event.container_id}`);
-          break;
-        default:
-          break;
-      }
-    }
-  }, [event]);
 
   return (
     <div className="flex items-center">
@@ -37,17 +50,24 @@ function Notifications() {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div
-            className={
-              event &&
-              "mr-4 rounded-md bg-muted py-1 px-4 text-sm flex flex-col text-right"
-            }
-          >
-            <span className="text-xs text-zinc-300">
-              {event && dayjs(event?.timestamp).format("DD, MMM HH:mm")}
-            </span>
-            <span className="text-sm">{event?.message}</span>
-          </div>
+          {event?.type === "created" ? (
+            <NotificationCreated
+              timestamp={event?.timestamp}
+              containerId={event?.container_id}
+            />
+          ) : (
+            <div
+              className={
+                event &&
+                "mr-4 rounded-md bg-muted py-1 px-4 text-sm flex flex-col text-right"
+              }
+            >
+              <span className="text-xs text-zinc-300">
+                {event && dayjs(event?.timestamp).format("MMM, DD HH:mm")}
+              </span>
+              <span className="text-sm">{event?.message}</span>
+            </div>
+          )}
         </motion.div>
         <motion.div
           key={event ? event.id + "icon" : "icon"}

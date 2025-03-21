@@ -10,8 +10,24 @@ export default function App() {
   const motionTransition = { duration: 0.5 };
 
   return (
-    <motion.div initial={motionInitial} animate={motionAnimate} transition={motionTransition}>
-      <AppContent />
-    </motion.div>
+    <div className="max-w-[90%] mx-auto mt-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <motion.h1
+          initial={motionInitial}
+          animate={motionAnimate}
+          transition={motionTransition}
+          className="text-3xl font-bold"
+        >
+          Home
+        </motion.h1>
+      </div>
+      <motion.div
+        initial={motionInitial}
+        animate={motionAnimate}
+        transition={motionTransition}
+      >
+        <AppContent />
+      </motion.div>
+    </div>
   );
 }
