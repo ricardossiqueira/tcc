@@ -12,10 +12,35 @@ import (
 )
 
 const BaseURL = "https://api.llama-api.com"
-const Model = "deepseek-r1"
+
+type AvailableModels string
+
+const (
+	DeepseekR1   AvailableModels = "deepseek-r1"
+	Llama3_3_70b AvailableModels = "llama3.3-70b"
+)
+
+var mapAvailableModels = map[AvailableModels]string{
+	DeepseekR1:   "deepseek-r1",
+	Llama3_3_70b: "llama3.3-70b",
+}
+
+type AvailablePrompts string
+
+const (
+	DescribeService AvailablePrompts = "llm/system_prompts/describe_service.md"
+	CreateService   AvailablePrompts = "llm/system_prompts/create_service.md"
+)
+
+var mapAvailablePrompts = map[AvailablePrompts]string{
+	DescribeService: "llm/system_prompts/describe_service.md",
+	CreateService:   "llm/system_prompts/create_service.md",
+}
 
 type Client struct {
-	APIKey string
+	APIKey       string
+	SystemPrompt AvailablePrompts
+	Model        AvailableModels
 }
 
 type Message struct {
@@ -33,14 +58,29 @@ type RequestPayload struct {
 // this lib isn't working anymore sadly
 type ResponsePayload = *openai.ChatCompletion
 
-func NewClient(apiKey string) *Client {
-	return &Client{APIKey: apiKey}
+func NewClient() *Client {
+	apiKey := os.Getenv("LLAMA_API_KEY")
+	return &Client{APIKey: apiKey, SystemPrompt: "", Model: ""}
 }
 
-func (c *Client) GenerateText(prompt string) (ResponsePayload, error) {
+func (c *Client) SetSystemPrompt(systemPrompt AvailablePrompts) *Client {
+	c.SystemPrompt = systemPrompt
+	return c
+}
+
+func (c *Client) SetModel(model AvailableModels) *Client {
+	c.Model = model
+	return c
+}
+
+func (c *Client) generateText(prompt string) (ResponsePayload, error) {
 	url := BaseURL + "/chat/completions"
 
-	systemPrompt1, err := os.ReadFile("llm/prompts/system_prompt_1.md")
+	if c.SystemPrompt == "" || c.Model == "" {
+		return nil, errors.New("system prompt and model are required")
+	}
+
+	systemPromptServiceGeneration, err := os.ReadFile(mapAvailablePrompts[c.SystemPrompt])
 	if err != nil {
 		return nil, err
 	}
@@ -50,14 +90,14 @@ func (c *Client) GenerateText(prompt string) (ResponsePayload, error) {
 		Messages: []Message{
 			{
 				Role:    "system",
-				Content: string(systemPrompt1),
+				Content: string(systemPromptServiceGeneration),
 			},
 			{
 				Role:    "user",
 				Content: prompt,
 			},
 		},
-		Model: Model,
+		Model: mapAvailableModels[c.Model],
 	}
 
 	data, err := json.Marshal(payload)
@@ -95,14 +135,10 @@ func (c *Client) GenerateText(prompt string) (ResponsePayload, error) {
 	return responsePayload, nil
 }
 
-func Run(userMessage string) (ResponsePayload, error) {
-	apiKey := os.Getenv("LLAMA_API_KEY")
-	client := NewClient(apiKey)
-
-	result, err := client.GenerateText(userMessage)
+func (c *Client) Run(userMessage string) (ResponsePayload, error) {
+	result, err := c.generateText(userMessage)
 	if err != nil {
 		return nil, err
 	}
-
 	return result, nil
 }

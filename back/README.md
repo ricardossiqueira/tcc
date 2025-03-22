@@ -16,5 +16,7 @@
  - [ ] LLM system prompt on db (secondary issue)
  - [ ] LLM model selection (secondary issue)
  - [ ] Create container stats on container creation
- - [ ] Webhook/SSE to notify frontend about container status changes (up requests are taking too long on VPS and it's timing out)
+ - [x] Webhook/SSE to notify frontend about container status changes (up requests are taking too long on VPS and it's timing out)
  - [ ] Improve power-apps description page
+ - [ ] Secure service routes
+ - [ ] Better creation logs (real time logging)

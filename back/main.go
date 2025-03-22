@@ -77,7 +77,8 @@ func main() {
 				return apis.NewBadRequestError("Message is required", nil)
 			}
 
-			chatCompletion, err := llm.Run(body.Message)
+			llmClient := llm.NewClient()
+			chatCompletion, err := llmClient.SetModel(llm.DeepseekR1).SetSystemPrompt(llm.CreateService).Run(body.Message)
 
 			if err != nil {
 				return apis.NewBadRequestError(err.Error(), nil)
