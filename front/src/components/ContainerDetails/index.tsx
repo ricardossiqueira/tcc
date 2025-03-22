@@ -8,24 +8,18 @@ import { useGetContainerDetailsQuery } from "../../api/containers";
 import { ContainerStatusBadge } from "../ContainerStatusBadge";
 import Loading from "../Loading";
 import { Button } from "../ui/button";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardDescription,
-} from "../ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { ContainerMetricsTab } from "./ContainerMetricsTab";
 import { ContainerApiSimulatorTab } from "./ContainerAPISimulatorTab";
 import { motion } from "framer-motion";
 import { ContainerDetailsTab } from "./ContainerDetailsTab";
+import { ContainerDescriptionTab } from "./ContainerDescriptionTab";
 
 const TabsValue = {
   METRICS: "METRICS",
   API: "API",
   DETAILS: "DETAILS",
-  LOGS: "LOGS",
+  DESCRIPTION: "DESCRIPTION",
 };
 
 const DefaultTab = TabsValue.DETAILS;
@@ -124,9 +118,7 @@ export function ContainerDetails() {
           <TabsTrigger value={TabsValue.METRICS}>Metrics</TabsTrigger>
           <TabsTrigger value={TabsValue.API}>API Simulator</TabsTrigger>
           <TabsTrigger value={TabsValue.DETAILS}>Details</TabsTrigger>
-          <TabsTrigger value={TabsValue.LOGS} disabled>
-            Logs
-          </TabsTrigger>
+          <TabsTrigger value={TabsValue.DESCRIPTION}>Description</TabsTrigger>
         </TabsList>
         <TabsContent value={TabsValue.METRICS}>
           <motion.div
@@ -155,40 +147,13 @@ export function ContainerDetails() {
             <ContainerDetailsTab containerId={container.id} />
           </motion.div>
         </TabsContent>
-        <TabsContent value={TabsValue.LOGS}>
+        <TabsContent value={TabsValue.DESCRIPTION}>
           <motion.div
             initial={motionInitial}
             animate={motionAnimate}
             transition={motionTransition}
           >
-            <Card>
-              <CardHeader>
-                <CardTitle>Container Logs</CardTitle>
-                <CardDescription>
-                  Real-time logs from the container
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="bg-black text-green-400 font-mono text-sm p-4 rounded-md h-80 overflow-auto">
-                  <div>Starting container {container.id.slice(0, 8)}...</div>
-                  <div>Container started successfully</div>
-                  <div>Initializing services...</div>
-                  <div>Services initialized</div>
-                  <div>Listening on port {container.port || "None"}</div>
-                  <div>Ready to accept connections</div>
-                  {container.status === "Stopped" && (
-                    <>
-                      <div className="text-red-500">
-                        ERROR: Connection refused
-                      </div>
-                      <div className="text-red-500">
-                        ERROR: Service unavailable
-                      </div>
-                    </>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+            <ContainerDescriptionTab containerId={container.id} />
           </motion.div>
         </TabsContent>
       </Tabs>

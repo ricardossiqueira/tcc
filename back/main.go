@@ -67,7 +67,16 @@ func main() {
 		//* GET from a container
 		e.Router.GET("/docker/containers/:id", cn.ContainerGET)
 
-		//* Post to the llm chatbot
+		//* GET details from the container
+		e.Router.GET("/docker/containers/:id/details", cn.Details, middlewares.RequireContainerOwnership(app))
+
+		//* GET raw stats from the container
+		e.Router.GET("/docker/containers/:id/stats", cn.Stats, middlewares.RequireContainerOwnership(app))
+
+		//* GET computed stats from the container //TODO: fix create stats on container creation
+		e.Router.GET("/docker/containers/:id/computed-stats", cn.ComputedStats, middlewares.RequireContainerOwnership(app))
+
+		//* Post to the llm chatbot //TODO: wrap this function in another file
 		e.Router.POST("/llm/chat", func(c echo.Context) error {
 			body := types.ChatDTO{}
 			if err := c.Bind(&body); err != nil {
@@ -79,7 +88,6 @@ func main() {
 
 			llmClient := llm.NewClient()
 			chatCompletion, err := llmClient.SetModel(llm.DeepseekR1).SetSystemPrompt(llm.CreateService).Run(body.Message)
-
 			if err != nil {
 				return apis.NewBadRequestError(err.Error(), nil)
 			}
@@ -87,13 +95,6 @@ func main() {
 			// return c.JSON(http.StatusOK, map[string]string{"message": chatCompletion.Choices[0].Message.Content})
 			return c.JSON(http.StatusOK, chatCompletion)
 		}, apis.LoadAuthContext(app))
-
-		e.Router.GET("/docker/containers/:id/details", cn.Details, middlewares.RequireContainerOwnership(app))
-
-		e.Router.GET("/docker/containers/:id/stats", cn.Stats, middlewares.RequireContainerOwnership(app))
-		e.Router.GET("/docker/containers/:id/computed-stats", cn.ComputedStats, middlewares.RequireContainerOwnership(app))
-
-		e.Router.GET("/docker/containers/:id/logs", func(c echo.Context) error { return nil }, middlewares.RequireContainerOwnership(app))
 
 		return nil
 	})

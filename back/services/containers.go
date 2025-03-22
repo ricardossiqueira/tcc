@@ -2,6 +2,7 @@ package services
 
 import (
 	"back/docker"
+	"back/llm"
 	"back/sse"
 	"back/types"
 	"back/utils"
@@ -275,6 +276,7 @@ func (cn Container) Create(c echo.Context) error {
 	if err := c.Bind(&data); err != nil {
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
+	script := data.Payload.Choices[0].Message.Content
 
 	//CREATE script
 	collection, err := cn.app.Dao().FindCollectionByNameOrId("scripts")
@@ -286,7 +288,7 @@ func (cn Container) Create(c echo.Context) error {
 	form := forms.NewRecordUpsert(cn.app, record)
 
 	form.LoadData(map[string]any{
-		"script":  data.Payload.Choices[0].Message.Content,
+		"script":  script,
 		"payload": data.Payload,
 		"owner":   user.Id,
 		"prompt":  data.Prompt,
@@ -396,6 +398,17 @@ func (cn Container) Deploy(e *core.ModelEvent) error {
 		return err
 	}
 
+	llmClient := llm.NewClient()
+	response, err := llmClient.SetModel(llm.Llama3_3_70b).SetSystemPrompt(llm.DescribeService).Run(script.Script)
+	description := ""
+	if err != nil {
+		description = "Could not generate description for this service."
+		fmt.Print("err", description)
+	} else {
+		description = response.Choices[0].Message.Content
+		fmt.Print("suc", description)
+	}
+
 	//Create container
 	collection, err := cn.app.Dao().FindCollectionByNameOrId("containers")
 	if err != nil {
@@ -409,13 +422,14 @@ func (cn Container) Deploy(e *core.ModelEvent) error {
 	containerName := namesgenerator.GetRandomName(0)
 
 	form.LoadData(map[string]any{
-		"docker_id": resp.ID,
-		"status":    "Up",
-		"image":     docker.GetImage(),
-		"script":    script.Id,
-		"port":      port,
-		"owner":     script.Owner,
-		"name":      containerName,
+		"docker_id":   resp.ID,
+		"status":      "Up",
+		"image":       docker.GetImage(),
+		"script":      script.Id,
+		"port":        port,
+		"owner":       script.Owner,
+		"name":        containerName,
+		"description": description,
 	})
 
 	if err := form.Submit(); err != nil {

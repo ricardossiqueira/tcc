@@ -36,6 +36,10 @@ import SyntaxHighlighter from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { useToast } from "../../hooks/useToast";
 import dayjs from "dayjs";
+import ReactCodeMirror from "@uiw/react-codemirror";
+import { aura } from "@uiw/codemirror-theme-aura";
+import { python } from "@codemirror/lang-python";
+import { json } from "@codemirror/lang-json";
 
 interface ContainerApiSimulatorTabProps {
   containerId: string;
@@ -105,6 +109,19 @@ export function ContainerApiSimulatorTab({
     },
   });
 
+  const data = useMutationState({
+    filters: { mutationKey },
+    select: (mutation) => mutation.state.data,
+  });
+
+  useEffect(() => {
+    if (data) {
+      data.forEach(processApiSuccess);
+      setResponse(JSON.stringify(data[data.length - 1], null, 2));
+      form.setValue("payload", data[data.length - 1]?.config?.data);
+    }
+  }, []);
+
   function onSubmit(values: PostRequestRawJSONSchema) {
     mutatePOST(JSON.parse(values.payload));
   }
@@ -117,20 +134,11 @@ export function ContainerApiSimulatorTab({
     }
   };
 
-  const data = useMutationState({
-    filters: { mutationKey },
-    select: (mutation) => mutation.state.data,
-  });
-
-  useEffect(() => {
-    data && data.forEach(processApiSuccess);
-  }, []);
-
   const isLoading = isGETPending || isPOSTPending;
 
   return (
-    <div className="grid gap-6 md:grid-cols-2">
-      <Card className="h-fit">
+    <div className="grid gap-6 md:grid-cols-2 grid-rows-5 h-full">
+      <Card className="h-full row-span-2">
         <CardHeader>
           <CardTitle>API Request</CardTitle>
           <CardDescription>
@@ -226,27 +234,27 @@ export function ContainerApiSimulatorTab({
         </CardFooter>
       </Card>
 
-      <Card className="h-fit">
+      <Card className="h-full flex flex-col row-span-5">
         <CardHeader>
           <CardTitle>Response</CardTitle>
-          <CardDescription>API response from the container</CardDescription>
         </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="response">
-            <TabsList>
+        <CardContent className="h-full flex">
+          <Tabs defaultValue="response" className="flex w-full flex-1 flex-col">
+            <TabsList className="w-fit">
               <TabsTrigger value="response">Response</TabsTrigger>
               <TabsTrigger value="history">History</TabsTrigger>
             </TabsList>
-            <TabsContent value="response">
-              <SyntaxHighlighter
-                language="json"
-                style={oneDark}
-                className="rounded-md bg-muted p-4 font-mono text-sm h-80 overflow-auto"
-                showLineNumbers
-              >
-                {response ||
-                  "// No response yet. Send a request to see the response."}
-              </SyntaxHighlighter>
+            <TabsContent value="response" className="relative flex-1">
+              <ReactCodeMirror
+                theme={aura}
+                extensions={[json()]}
+                className="h-full"
+                value={
+                  response ||
+                  "// No response yet. Send a request to see the response."
+                }
+                editable={false}
+              />
             </TabsContent>
             <TabsContent value="history">
               <div className="space-y-4 h-80 overflow-auto">

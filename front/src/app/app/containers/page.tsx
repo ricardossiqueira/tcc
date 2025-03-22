@@ -12,13 +12,22 @@ export default function App() {
   return (
     <div className="max-w-[90%] mx-auto mt-6 space-y-6">
       <div className="flex items-center justify-between">
-        <motion.h1 initial={motionInitial} animate={motionAnimate} transition={motionTransition} className="text-3xl font-bold">Containers</motion.h1>
+        <motion.h1
+          initial={motionInitial}
+          animate={motionAnimate}
+          transition={motionTransition}
+          className="text-3xl font-bold"
+        >
+          Containers
+        </motion.h1>
       </div>
-      <motion.div initial={motionInitial} animate={motionAnimate} transition={motionTransition}>
+      <motion.div
+        initial={motionInitial}
+        animate={motionAnimate}
+        transition={motionTransition}
+      >
         <ContainerList />
       </motion.div>
     </div>
   );
 }
-
-
