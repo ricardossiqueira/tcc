@@ -31,9 +31,10 @@ func main() {
 	}
 	defer dockerCli.Close()
 
-	c := make(chan sse.Notification, 100)
+	notificationsChan := make(chan sse.Notification, 100)
+	statusChan := make(chan types.CreateContainerStatsDTO, 100)
 
-	cn := services.NewContainer(app, dockerCtx, dockerCli, c)
+	cn := services.NewContainer(app, dockerCtx, dockerCli, notificationsChan, statusChan)
 
 	// app.OnBeforeServe().Add(cronjobs.ContainerCleaner(app, cn))
 	app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
@@ -48,6 +49,9 @@ func main() {
 
 		//* Create a new container
 		e.Router.POST("/docker/containers/new", cn.Create, apis.LoadAuthContext(app))
+
+		//* Delete a container
+		e.Router.DELETE("/docker/containers/:id", cn.Delete, middlewares.RequireContainerOwnership(app))
 
 		//* List all user containers
 		e.Router.GET("/docker/containers/list", cn.List, apis.RequireRecordAuth())

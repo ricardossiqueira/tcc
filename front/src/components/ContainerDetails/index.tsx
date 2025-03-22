@@ -2,9 +2,12 @@
 import { ArrowLeft, Play, RefreshCw, Square, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useQueryClient, useQuery, useMutation } from "@tanstack/react-query";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { api } from "../../api/axios";
-import { useGetContainerDetailsQuery } from "../../api/containers";
+import {
+  useDeleteContainerMutation,
+  useGetContainerDetailsQuery,
+} from "../../api/containers";
 import { ContainerStatusBadge } from "../ContainerStatusBadge";
 import Loading from "../Loading";
 import { Button } from "../ui/button";
@@ -31,6 +34,14 @@ export function ContainerDetails() {
     queryKey: getContainerDetailsQueryKey,
     queryFn: getContainerDetailsQueryFn,
   } = useGetContainerDetailsQuery(id as string);
+  const { push } = useRouter();
+
+  const { mutate: deleteContainerMutate } = useDeleteContainerMutation({
+    containerId: id as string,
+    onSuccess: () => {
+      push("/app/containers");
+    },
+  });
 
   const { data: container, isLoading } = useQuery({
     refetchOnWindowFocus: true,
@@ -106,7 +117,7 @@ export function ContainerDetails() {
             <RefreshCw className="mr-2 h-4 w-4" />
             Restart
           </Button>
-          <Button variant="destructive">
+          <Button variant="destructive" onClick={() => deleteContainerMutate()}>
             <Trash2 className="mr-2 h-4 w-4" />
             Delete
           </Button>

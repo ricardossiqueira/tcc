@@ -61,10 +61,10 @@ const UserContext = createContext<UserContextType>({
   user: null,
   isLoading: true,
   error: undefined,
-  fetchUser: () => { },
-  logout: () => { },
-  redirect: () => { },
-  registerUser: () => { },
+  fetchUser: () => {},
+  logout: () => {},
+  redirect: () => {},
+  registerUser: () => {},
 });
 
 export interface CachedUserProperties {
@@ -76,11 +76,7 @@ export interface CachedUserProperties {
   cacheTime: number;
 }
 
-export const UserProvider = ({
-  children,
-}: {
-  children: ReactNode;
-}) => {
+export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<CachedUserProperties | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | undefined>(undefined);
@@ -115,7 +111,7 @@ export const UserProvider = ({
           setError(err.response?.data as Error);
           toast({
             title: "Login failed",
-            description: err.response.data.message,
+            description: err.response?.data?.message,
             variant: "destructive",
           });
         })

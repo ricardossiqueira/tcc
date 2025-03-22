@@ -30,19 +30,25 @@ import (
 )
 
 type Container struct {
-	app       *pocketbase.PocketBase
-	DockerCtx context.Context
-	DockerCli *client.Client
-	c         chan sse.Notification
+	app               *pocketbase.PocketBase
+	DockerCtx         context.Context
+	DockerCli         *client.Client
+	notificationsChan chan sse.Notification
+	statusChan        chan types.CreateContainerStatsDTO
 }
 
-func NewContainer(app *pocketbase.PocketBase, dockerCtx context.Context, dockerCli *client.Client, c chan sse.Notification) *Container {
-	return &Container{
-		app:       app,
-		DockerCtx: dockerCtx,
-		DockerCli: dockerCli,
-		c:         c,
+func NewContainer(app *pocketbase.PocketBase, dockerCtx context.Context, dockerCli *client.Client, notificationsChan chan sse.Notification, statusChan chan types.CreateContainerStatsDTO) *Container {
+	cn := &Container{
+		app:               app,
+		DockerCtx:         dockerCtx,
+		DockerCli:         dockerCli,
+		notificationsChan: notificationsChan,
+		statusChan:        statusChan,
 	}
+
+	go cn.HandleStatusChan()
+
+	return cn
 }
 
 func (cn Container) GetContainerById(containerId string) (types.ContainerDetailsDTO, error) {
@@ -87,6 +93,17 @@ func (cn Container) CreateStats(payload types.CreateContainerStatsDTO) error {
 	cn.app.Logger().Info(fmt.Sprintf("Container stats created for container %s", payload.Container))
 
 	return nil
+}
+
+func (cn Container) HandleStatusChan() {
+	for {
+		select {
+		case status := <-cn.statusChan:
+			if err := cn.CreateStats(status); err != nil {
+				cn.app.Logger().Error(err.Error())
+			}
+		}
+	}
 }
 
 // * List all containers
@@ -153,11 +170,12 @@ func (cn Container) StopContainer(c echo.Context) error {
 	}
 
 	duration := time.Now().UnixMilli() - started_at
-	if err := cn.CreateStats(types.CreateContainerStatsDTO{Container: containerId, StopDuration: duration}); err != nil {
-		cn.app.Logger().Error(err.Error())
+	cn.statusChan <- types.CreateContainerStatsDTO{
+		Container:    containerId,
+		StopDuration: duration,
 	}
 
-	cn.c <- sse.Notification{
+	cn.notificationsChan <- sse.Notification{
 		ID:          uuid.New().String(),
 		Type:        "success",
 		Data:        containerId,
@@ -228,11 +246,12 @@ func (cn Container) StartContainer(c echo.Context) error {
 	}
 
 	duration := time.Now().UnixMilli() - started_at
-	if err := cn.CreateStats(types.CreateContainerStatsDTO{Container: containerId, StartDuration: duration}); err != nil {
-		cn.app.Logger().Error(err.Error())
+	cn.statusChan <- types.CreateContainerStatsDTO{
+		Container:     containerId,
+		StartDuration: duration,
 	}
 
-	cn.c <- sse.Notification{
+	cn.notificationsChan <- sse.Notification{
 		ID:          uuid.New().String(),
 		Type:        "success",
 		Data:        containerId,
@@ -301,6 +320,21 @@ func (cn Container) Create(c echo.Context) error {
 	return nil
 }
 
+func (cn Container) Delete(c echo.Context) error {
+	containerId := c.PathParam("id")
+
+	record, err := cn.app.Dao().FindRecordById("containers", containerId)
+	if err != nil {
+		return apis.NewBadRequestError(err.Error(), nil)
+	}
+
+	if err := cn.app.Dao().DeleteRecord(record); err != nil {
+		return apis.NewBadRequestError(err.Error(), nil)
+	}
+
+	return c.JSON(http.StatusOK, nil)
+}
+
 func (cn Container) Details(c echo.Context) error {
 	containerId := c.PathParam("id")
 
@@ -329,7 +363,7 @@ func (cn Container) Notifications(c echo.Context) error {
 		case <-c.Request().Context().Done():
 			return nil
 
-		case eventData := <-cn.c:
+		case eventData := <-cn.notificationsChan:
 			if jwtUserId != userId {
 				continue
 			}
@@ -357,7 +391,7 @@ func (cn Container) Notifications(c echo.Context) error {
 
 func (cn *Container) TestSSE(c echo.Context) error {
 	user := c.Get(apis.ContextAuthRecordKey).(*models.Record)
-	cn.c <- sse.Notification{
+	cn.notificationsChan <- sse.Notification{
 		ID:          uuid.New().String(),
 		Type:        "success",
 		Data:        "test",
@@ -371,6 +405,7 @@ func (cn *Container) TestSSE(c echo.Context) error {
 
 func (cn Container) Deploy(e *core.ModelEvent) error {
 	script := types.ScriptDTO{}
+	started_at := time.Now().UnixMilli()
 
 	//GET script
 	cn.app.Dao().DB().
@@ -406,7 +441,6 @@ func (cn Container) Deploy(e *core.ModelEvent) error {
 		fmt.Print("err", description)
 	} else {
 		description = response.Choices[0].Message.Content
-		fmt.Print("suc", description)
 	}
 
 	//Create container
@@ -442,7 +476,13 @@ func (cn Container) Deploy(e *core.ModelEvent) error {
 		return err
 	}
 
-	cn.c <- sse.Notification{
+	duration := time.Now().UnixMilli() - started_at
+	cn.statusChan <- types.CreateContainerStatsDTO{
+		Container:     record.Id,
+		StartDuration: duration,
+	}
+
+	cn.notificationsChan <- sse.Notification{
 		ID:          uuid.New().String(),
 		Type:        "created",
 		Data:        resp.ID,

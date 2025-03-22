@@ -1,3 +1,8 @@
+import {
+  useMutation,
+  UseMutationOptions,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { api } from "./axios";
 
 export type ContainerStatuses = "Up" | "Stopped";
@@ -22,7 +27,7 @@ const useGetUserContainersQuery = <T = IContainer[]>() => {
     queryKey: ["getUserContainers"],
     queryFn: () => getUserContainers() as Promise<T>,
   };
-}
+};
 
 export interface IContainerDetails {
   id: string;
@@ -52,6 +57,38 @@ const useGetContainerDetailsQuery = (containerId: string) => {
     queryKey: ["getContainerDetails", containerId],
     queryFn: () => getContainerDetails(containerId),
   };
+};
+
+const deleteContainer = async (containerId: string) => {
+  await api.delete(`/docker/containers/${containerId}`);
+};
+
+interface IDeleteContainerMutationOptions extends UseMutationOptions<void> {
+  containerId: string;
 }
 
-export { useGetContainerDetailsQuery, useGetUserContainersQuery };
+const useDeleteContainerMutation = ({
+  containerId,
+  ...rest
+}: IDeleteContainerMutationOptions) => {
+  const queryClient = useQueryClient();
+  const { queryKey: getContainerDetailsQueryKey } =
+    useGetContainerDetailsQuery(containerId);
+  const { queryKey: getUserContainersQueryKey } = useGetUserContainersQuery();
+
+  return useMutation({
+    mutationKey: ["deleteContainer", containerId],
+    mutationFn: () => deleteContainer(containerId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: getContainerDetailsQueryKey });
+      queryClient.invalidateQueries({ queryKey: getUserContainersQueryKey });
+    },
+    ...rest,
+  });
+};
+
+export {
+  useGetContainerDetailsQuery,
+  useGetUserContainersQuery,
+  useDeleteContainerMutation,
+};
