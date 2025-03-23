@@ -270,6 +270,7 @@ func (cn Container) ContainerPOST(c echo.Context) error {
 
 	container, err := cn.GetContainerById(containerId)
 	if err != nil {
+		cn.app.App.Logger().Error(fmt.Sprintf("[CONTAINER_CONTAINER_POST]: %v", err))
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
@@ -282,6 +283,7 @@ func (cn Container) ContainerGET(c echo.Context) error {
 
 	container, err := cn.GetContainerById(containerId)
 	if err != nil {
+		cn.app.App.Logger().Error(fmt.Sprintf("[CONTAINER_CONTAINER_GET]: %v", err))
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
 	status, value := ProxyGET(fmt.Sprintf("http://localhost:%s", container.Port))
@@ -293,6 +295,7 @@ func (cn Container) Create(c echo.Context) error {
 
 	data := types.ScriptCreateDTO{}
 	if err := c.Bind(&data); err != nil {
+		cn.app.App.Logger().Error(fmt.Sprintf("[CONTAINER_CREATE]: %v", err))
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
 	script := data.Payload.Choices[0].Message.Content
@@ -300,6 +303,7 @@ func (cn Container) Create(c echo.Context) error {
 	//CREATE script
 	collection, err := cn.app.Dao().FindCollectionByNameOrId("scripts")
 	if err != nil {
+		cn.app.App.Logger().Error(fmt.Sprintf("[CONTAINER_CREATE]: %v", err))
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
@@ -314,6 +318,7 @@ func (cn Container) Create(c echo.Context) error {
 	})
 
 	if err := form.Submit(); err != nil {
+		cn.app.App.Logger().Error(fmt.Sprintf("[CONTAINER_CREATE]: %v", err))
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
@@ -323,12 +328,25 @@ func (cn Container) Create(c echo.Context) error {
 func (cn Container) Delete(c echo.Context) error {
 	containerId := c.PathParam("id")
 
-	record, err := cn.app.Dao().FindRecordById("containers", containerId)
+	containerRecord, err := cn.app.Dao().FindRecordById("containers", containerId)
 	if err != nil {
+		cn.app.App.Logger().Error(fmt.Sprintf("[CONTAINER_DELETE]: %v", err))
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
-	if err := cn.app.Dao().DeleteRecord(record); err != nil {
+	scriptRecord, err := cn.app.Dao().FindRecordById("scripts", containerRecord.GetString("script"))
+	if err != nil {
+		cn.app.App.Logger().Error(fmt.Sprintf("[CONTAINER_DELETE]: %v", err))
+		return apis.NewBadRequestError(err.Error(), nil)
+	}
+
+	if err := cn.app.Dao().DeleteRecord(containerRecord); err != nil {
+		cn.app.App.Logger().Error(fmt.Sprintf("[CONTAINER_DELETE]: %v", err))
+		return apis.NewBadRequestError(err.Error(), nil)
+	}
+
+	if err := cn.app.Dao().DeleteRecord(scriptRecord); err != nil {
+		cn.app.App.Logger().Error(fmt.Sprintf("[CONTAINER_DELETE]: %v", err))
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
@@ -340,6 +358,7 @@ func (cn Container) Details(c echo.Context) error {
 
 	container, err := cn.GetContainerById(containerId)
 	if err != nil {
+		cn.app.App.Logger().Error(fmt.Sprintf("[CONTAINER_DETAILS]: %v", err))
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
@@ -417,19 +436,19 @@ func (cn Container) Deploy(e *core.ModelEvent) error {
 	//Parse script to .tar
 	var tar bytes.Buffer
 	if err := utils.ScriptToTar(&tar, script.Script); err != nil {
-		cn.app.Logger().Error(err.Error())
+		cn.app.App.Logger().Error(fmt.Sprintf("[CONTAINER_DEPLOY]: %v", err))
 		return err
 	}
 
 	port, err := AllocatePort()
 	if err != nil {
-		cn.app.Logger().Error(err.Error())
+		cn.app.App.Logger().Error(fmt.Sprintf("[CONTAINER_DEPLOY]: %v", err))
 		return err
 	}
 
 	resp, err := docker.CreateContainer(cn.app, cn.DockerCli, cn.DockerCtx, tar, port)
 	if err != nil {
-		cn.app.Logger().Error(err.Error())
+		cn.app.App.Logger().Error(fmt.Sprintf("[CONTAINER_DEPLOY]: %v", err))
 		return err
 	}
 
@@ -446,7 +465,7 @@ func (cn Container) Deploy(e *core.ModelEvent) error {
 	//Create container
 	collection, err := cn.app.Dao().FindCollectionByNameOrId("containers")
 	if err != nil {
-		cn.app.Logger().Error(err.Error())
+		cn.app.App.Logger().Error(fmt.Sprintf("[CONTAINER_DEPLOY]: %v", err))
 		return err
 	}
 
@@ -467,12 +486,12 @@ func (cn Container) Deploy(e *core.ModelEvent) error {
 	})
 
 	if err := form.Submit(); err != nil {
-		cn.app.Logger().Error(err.Error())
+		cn.app.App.Logger().Error(fmt.Sprintf("[CONTAINER_DEPLOY]: %v", err))
 		return err
 	}
 
 	if err := cn.DockerCli.ContainerStart(cn.DockerCtx, resp.ID, dockerTypes.StartOptions{}); err != nil {
-		cn.app.Logger().Error(err.Error())
+		cn.app.App.Logger().Error(fmt.Sprintf("[CONTAINER_DEPLOY]: %v", err))
 		return err
 	}
 
