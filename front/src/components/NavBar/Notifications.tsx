@@ -19,7 +19,7 @@ function NotificationCreated({
   const { push } = useRouter();
   return (
     <div
-      className="p-[2px] bg-gradient-to-r from-purple-400 to-pink-600 rounded-md cursor-pointer"
+      className="p-[2px] bg-gradient-to-r from-purple-400 to-pink-600 rounded-md cursor-pointer mr-4"
       onClick={() => {
         push(`/app/containers/${containerId}`);
       }}

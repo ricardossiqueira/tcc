@@ -136,7 +136,7 @@ export default function ContainerList() {
         <div>In the beginning, there was nothing...</div>{" "}
         <div>
           Let's get started by creating your
-          <Link href="/app/containers">
+          <Link href="/app">
             <GradientSpan className="font-bold ml-2">
               first container
             </GradientSpan>

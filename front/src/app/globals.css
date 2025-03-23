@@ -153,7 +153,7 @@
   flex: 1; /* expand to the maximum */
   height: 100%;
   position: relative; /* needed for child component .cm-scroller */
-  border-radius: 0 0 0.5rem 0.5rem;
+  border-radius: 0 0.5rem 0.5rem 0.5rem;
 }
 
 .cm-scroller {
@@ -163,5 +163,5 @@
   bottom: 0;
   left: 0;
   overflow-y: auto;
-  border-radius: 0 0 0.5rem 0.5rem;
+  border-radius: 0 0.5rem 0.5rem 0.5rem;
 }
