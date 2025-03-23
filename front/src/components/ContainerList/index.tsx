@@ -132,14 +132,17 @@ export default function ContainerList() {
 
   if (!sortedContainers.length) {
     return (
-      <div className="flex items-center justify-center text-xl h-[70vh]">
-        No containers found. Let's create your
-        <Link href="/app">
-          <GradientSpan className="font-bold ml-2">
-            first container
-          </GradientSpan>
-        </Link>
-        !
+      <div className="flex items-center justify-center text-xl h-[70vh] flex-col">
+        <div>In the beginning, there was nothing...</div>{" "}
+        <div>
+          Let's get started by creating your
+          <Link href="/app/containers">
+            <GradientSpan className="font-bold ml-2">
+              first container
+            </GradientSpan>
+          </Link>
+          !
+        </div>
       </div>
     );
   }
