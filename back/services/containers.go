@@ -358,6 +358,22 @@ func (cn Container) Delete(c echo.Context) error {
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
+	containerName := containerRecord.GetString("name")
+	containerDockerId := containerRecord.GetString("docker_id")
+	containerStatus := containerRecord.GetString("status")
+	port := containerRecord.Get("port")
+
+	if containerStatus == "Up" {
+		if err := cn.DockerCli.ContainerStop(cn.DockerCtx, containerDockerId, dockerTypes.StopOptions{}); err != nil {
+			cn.app.Logger().Error(fmt.Sprintf("[CONTAINER_DELETE] %s", err.Error()))
+			return apis.NewBadRequestError(err.Error(), nil)
+		}
+		if err := cn.DockerCli.ContainerRemove(cn.DockerCtx, containerDockerId, dockerTypes.RemoveOptions{}); err != nil {
+			cn.app.Logger().Error(fmt.Sprintf("[CONTAINER_DELETE] %s", err.Error()))
+			return apis.NewBadRequestError(err.Error(), nil)
+		}
+	}
+
 	if err := cn.app.Dao().DeleteRecord(containerRecord); err != nil {
 		cn.app.App.Logger().Error(fmt.Sprintf("[CONTAINER_DELETE]: %v", err))
 		return apis.NewBadRequestError(err.Error(), nil)
@@ -368,20 +384,8 @@ func (cn Container) Delete(c echo.Context) error {
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
-	containerName := containerRecord.GetString("name")
-	containerDockerId := containerRecord.GetString("docker_id")
-	port := containerRecord.Get("port")
 	if port != nil {
 		cn.portMap.ReleasePort(containerRecord.GetString("port"))
-	}
-
-	if err := cn.DockerCli.ContainerStop(cn.DockerCtx, containerDockerId, dockerTypes.StopOptions{}); err != nil {
-		cn.app.Logger().Error(fmt.Sprintf("[CONTAINER_DELETE] %s", err.Error()))
-		return apis.NewBadRequestError(err.Error(), nil)
-	}
-	if err := cn.DockerCli.ContainerRemove(cn.DockerCtx, containerDockerId, dockerTypes.RemoveOptions{}); err != nil {
-		cn.app.Logger().Error(fmt.Sprintf("[CONTAINER_DELETE] %s", err.Error()))
-		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
 	cn.notificationsChan <- sse.Notification{

@@ -37,27 +37,16 @@ const useSSE = (url: string): Event | undefined => {
         try {
           const data = JSON.parse(event.data);
           setLastEvent(data);
-          setRetryCount(0); // Resetar tentativas após uma conexão bem-sucedida
-        } catch (error) {
-          console.log("Erro ao parsear JSON:", error);
-        }
+          setRetryCount(0);
+        } catch (error) {}
       };
 
       eventSource.onerror = (error) => {
-        console.log("Erro na conexão SSE:", error);
         eventSource?.close();
-
         if (retryCount < MAX_RETRIES) {
           const retryDelay = INITIAL_RETRY_DELAY * 2 ** retryCount; // Exponencial backoff
-          console.log(
-            `Tentando reconectar em ${retryDelay / 1000} segundos...`,
-          );
           retryTimeout = setTimeout(connect, retryDelay);
           setRetryCount((prev) => prev + 1);
-        } else {
-          console.log(
-            "Número máximo de tentativas atingido. Conexão encerrada.",
-          );
         }
       };
     };
