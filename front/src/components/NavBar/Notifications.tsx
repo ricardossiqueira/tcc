@@ -10,6 +10,7 @@ import { Button } from "../ui/button";
 interface NotificationCreatedProps {
   timestamp: string;
   containerId: string;
+  callback?: () => void;
 }
 
 function NotificationCreated({

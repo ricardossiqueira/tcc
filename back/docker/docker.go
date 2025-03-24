@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"log/slog"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
@@ -65,7 +64,7 @@ func CreateContainer(app *pocketbase.PocketBase, dockerCli *client.Client, docke
 	if err != nil {
 		return container.CreateResponse{}, err
 	}
-	app.Logger().Log(context.Background(), slog.LevelDebug, fmt.Sprintf("Container created: %s\n", resp.ID))
+	app.Logger().Info(fmt.Sprintf("[CREATE_CONTAINER] Container created: %s", resp.ID))
 
 	dockerCli.CopyToContainer(
 		dockerCtx,
@@ -74,7 +73,7 @@ func CreateContainer(app *pocketbase.PocketBase, dockerCli *client.Client, docke
 		bufio.NewReader(&tar),
 		container.CopyToContainerOptions{AllowOverwriteDirWithFile: true},
 	)
-	app.Logger().Log(context.Background(), slog.LevelDebug, fmt.Sprintf("Files copied to container: %s\n", resp.ID))
+	app.Logger().Info(fmt.Sprintf("[CREATE_CONTAINER] Files copied to container: %s", resp.ID))
 
 	return resp, nil
 }

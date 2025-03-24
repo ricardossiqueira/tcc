@@ -35,6 +35,7 @@ type Container struct {
 	DockerCli         *client.Client
 	notificationsChan chan sse.Notification
 	statusChan        chan types.CreateContainerStatsDTO
+	portMap           *PortMap
 }
 
 func NewContainer(app *pocketbase.PocketBase, dockerCtx context.Context, dockerCli *client.Client, notificationsChan chan sse.Notification, statusChan chan types.CreateContainerStatsDTO) *Container {
@@ -44,6 +45,7 @@ func NewContainer(app *pocketbase.PocketBase, dockerCtx context.Context, dockerC
 		DockerCli:         dockerCli,
 		notificationsChan: notificationsChan,
 		statusChan:        statusChan,
+		portMap:           NewPortMap(),
 	}
 
 	go cn.HandleStatusChan()
@@ -148,24 +150,31 @@ func (cn Container) StopContainer(c echo.Context) error {
 
 	container, err := cn.GetContainerById(containerId)
 	if err != nil {
+		cn.app.Logger().Error(fmt.Sprintf("[CONTAINER_STOP_CONTAINER] %s", err.Error()))
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
 	if err := cn.DockerCli.ContainerStop(cn.DockerCtx, container.DockerId, dockerTypes.StopOptions{}); err != nil {
+		cn.app.Logger().Error(fmt.Sprintf("[CONTAINER_STOP_CONTAINER] %s", err.Error()))
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
 	if err := cn.DockerCli.ContainerRemove(cn.DockerCtx, container.DockerId, dockerTypes.RemoveOptions{}); err != nil {
+		cn.app.Logger().Error(fmt.Sprintf("[CONTAINER_STOP_CONTAINER] %s", err.Error()))
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
+	cn.portMap.ReleasePort(container.Port)
+
 	record, err := cn.app.Dao().FindRecordById("containers", containerId)
 	if err != nil {
+		cn.app.Logger().Error(fmt.Sprintf("[CONTAINER_STOP_CONTAINER] %s", err.Error()))
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
 	record.Set("status", "Stopped")
-	record.Set("port", 0)
+	record.Set("port", nil)
 
 	if err := cn.app.Dao().SaveRecord(record); err != nil {
+		cn.app.Logger().Error(fmt.Sprintf("[CONTAINER_STOP_CONTAINER] %s", err.Error()))
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
@@ -196,6 +205,7 @@ func (cn Container) StartContainer(c echo.Context) error {
 
 	container, err := cn.GetContainerById(containerId)
 	if err != nil {
+		cn.app.Logger().Error(fmt.Sprintf("[CONTAINER_START_CONTAINER]: %s", err.Error()))
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
@@ -205,27 +215,32 @@ func (cn Container) StartContainer(c echo.Context) error {
 		Where(dbx.NewExp("id = {:id}", dbx.Params{"id": container.ScriptId})).
 		One(&script)
 	if err != nil {
+		cn.app.Logger().Error(fmt.Sprintf("[CONTAINER_START_CONTAINER]: %s", err.Error()))
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
 	//Parse script to .tar
 	var tar bytes.Buffer
 	if err := utils.ScriptToTar(&tar, script.Script); err != nil {
+		cn.app.Logger().Error(fmt.Sprintf("[CONTAINER_START_CONTAINER]: %s", err.Error()))
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
-	port, err := AllocatePort()
+	port, err := cn.portMap.AllocatePort()
 	if err != nil {
+		cn.app.Logger().Error(fmt.Sprintf("[CONTAINER_START_CONTAINER]: %s", err.Error()))
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
 	resp, err := docker.CreateContainer(cn.app, cn.DockerCli, cn.DockerCtx, tar, port)
 	if err != nil {
+		cn.app.Logger().Error(fmt.Sprintf("[CONTAINER_START_CONTAINER]: %s", err.Error()))
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
 	record, err := cn.app.Dao().FindRecordById("containers", containerId)
 	if err != nil {
+		cn.app.Logger().Error(fmt.Sprintf("[CONTAINER_START_CONTAINER]: %s", err.Error()))
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
@@ -238,10 +253,12 @@ func (cn Container) StartContainer(c echo.Context) error {
 	})
 
 	if err := form.Submit(); err != nil {
+		cn.app.Logger().Error(fmt.Sprintf("[CONTAINER_START_CONTAINER]: %s", err.Error()))
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
 	if err := cn.DockerCli.ContainerStart(cn.DockerCtx, resp.ID, dockerTypes.StartOptions{}); err != nil {
+		cn.app.Logger().Error(fmt.Sprintf("[CONTAINER_START_CONTAINER]: %s", err.Error()))
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
@@ -327,6 +344,7 @@ func (cn Container) Create(c echo.Context) error {
 
 func (cn Container) Delete(c echo.Context) error {
 	containerId := c.PathParam("id")
+	user := c.Get(apis.ContextAuthRecordKey).(*models.Record)
 
 	containerRecord, err := cn.app.Dao().FindRecordById("containers", containerId)
 	if err != nil {
@@ -348,6 +366,32 @@ func (cn Container) Delete(c echo.Context) error {
 	if err := cn.app.Dao().DeleteRecord(scriptRecord); err != nil {
 		cn.app.App.Logger().Error(fmt.Sprintf("[CONTAINER_DELETE]: %v", err))
 		return apis.NewBadRequestError(err.Error(), nil)
+	}
+
+	containerName := containerRecord.GetString("name")
+	containerDockerId := containerRecord.GetString("docker_id")
+	port := containerRecord.Get("port")
+	if port != nil {
+		cn.portMap.ReleasePort(containerRecord.GetString("port"))
+	}
+
+	if err := cn.DockerCli.ContainerStop(cn.DockerCtx, containerDockerId, dockerTypes.StopOptions{}); err != nil {
+		cn.app.Logger().Error(fmt.Sprintf("[CONTAINER_DELETE] %s", err.Error()))
+		return apis.NewBadRequestError(err.Error(), nil)
+	}
+	if err := cn.DockerCli.ContainerRemove(cn.DockerCtx, containerDockerId, dockerTypes.RemoveOptions{}); err != nil {
+		cn.app.Logger().Error(fmt.Sprintf("[CONTAINER_DELETE] %s", err.Error()))
+		return apis.NewBadRequestError(err.Error(), nil)
+	}
+
+	cn.notificationsChan <- sse.Notification{
+		ID:          uuid.New().String(),
+		Type:        "success",
+		Data:        containerId,
+		Message:     fmt.Sprintf("Container %s deleted.", containerName),
+		Timestamp:   time.Now(),
+		UserID:      user.Id,
+		ContainerID: containerId,
 	}
 
 	return c.JSON(http.StatusOK, nil)
@@ -440,7 +484,7 @@ func (cn Container) Deploy(e *core.ModelEvent) error {
 		return err
 	}
 
-	port, err := AllocatePort()
+	port, err := cn.portMap.AllocatePort()
 	if err != nil {
 		cn.app.App.Logger().Error(fmt.Sprintf("[CONTAINER_DEPLOY]: %v", err))
 		return err

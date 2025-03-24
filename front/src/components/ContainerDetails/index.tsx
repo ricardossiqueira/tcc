@@ -17,6 +17,7 @@ import { ContainerApiSimulatorTab } from "./ContainerAPISimulatorTab";
 import { motion } from "framer-motion";
 import { ContainerDetailsTab } from "./ContainerDetailsTab";
 import { ContainerDescriptionTab } from "./ContainerDescriptionTab";
+import { DeleteDialog } from "../DeleteDialog";
 
 const TabsValue = {
   METRICS: "METRICS",
@@ -28,20 +29,12 @@ const TabsValue = {
 const DefaultTab = TabsValue.DETAILS;
 
 export function ContainerDetails() {
-  const { id } = useParams();
+  const { id: containerId } = useParams();
   const queryClient = useQueryClient();
   const {
     queryKey: getContainerDetailsQueryKey,
     queryFn: getContainerDetailsQueryFn,
-  } = useGetContainerDetailsQuery(id as string);
-  const { push } = useRouter();
-
-  const { mutate: deleteContainerMutate } = useDeleteContainerMutation({
-    containerId: id as string,
-    onSuccess: () => {
-      push("/app/containers");
-    },
-  });
+  } = useGetContainerDetailsQuery(containerId as string);
 
   const { data: container, isLoading } = useQuery({
     refetchOnWindowFocus: true,
@@ -51,7 +44,7 @@ export function ContainerDetails() {
 
   const { mutateAsync: startContainer, isPending: startPending } = useMutation({
     mutationFn: () => {
-      return api.post(`/docker/containers/${id}/start`);
+      return api.post(`/docker/containers/${containerId}/start`);
     },
     onSuccess: () =>
       queryClient.invalidateQueries({
@@ -61,7 +54,7 @@ export function ContainerDetails() {
 
   const { mutateAsync: stopContainer, isPending: stopPending } = useMutation({
     mutationFn: () => {
-      return api.post(`/docker/containers/${id}/stop`);
+      return api.post(`/docker/containers/${containerId}/stop`);
     },
     onSuccess: () =>
       queryClient.invalidateQueries({
@@ -117,10 +110,7 @@ export function ContainerDetails() {
             <RefreshCw className="mr-2 h-4 w-4" />
             Restart
           </Button>
-          <Button variant="destructive" onClick={() => deleteContainerMutate()}>
-            <Trash2 className="mr-2 h-4 w-4" />
-            Delete
-          </Button>
+          <DeleteDialog pushHome containerId={container.id} />
         </div>
       </div>
 

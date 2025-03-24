@@ -1,6 +1,7 @@
 import {
   useMutation,
   UseMutationOptions,
+  UseMutationResult,
   useQueryClient,
 } from "@tanstack/react-query";
 import { api } from "./axios";
@@ -59,11 +60,11 @@ const useGetContainerDetailsQuery = (containerId: string) => {
   };
 };
 
-const deleteContainer = async (containerId: string) => {
+async function deleteContainer(containerId: string) {
   await api.delete(`/docker/containers/${containerId}`);
-};
+}
 
-interface IDeleteContainerMutationOptions extends UseMutationOptions<void> {
+interface IDeleteContainerMutationOptions extends UseMutationOptions {
   containerId: string;
 }
 

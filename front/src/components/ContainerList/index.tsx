@@ -251,7 +251,7 @@ export default function ContainerList() {
                       <Play className="h-4 w-4" />
                     </Button>
                   )}
-                  <DropdownMenu>
+                  {/* <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon">
                         <MoreHorizontal className="h-4 w-4" />
@@ -269,7 +269,7 @@ export default function ContainerList() {
                         Delete
                       </DropdownMenuItem>
                     </DropdownMenuContent>
-                  </DropdownMenu>
+                  </DropdownMenu> */}
                 </div>
               </TableCell>
             </TableRow>
