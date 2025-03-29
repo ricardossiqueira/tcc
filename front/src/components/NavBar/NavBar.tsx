@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Divide, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,

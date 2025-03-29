@@ -38,7 +38,6 @@ import { useToast } from "../../hooks/useToast";
 import dayjs from "dayjs";
 import ReactCodeMirror from "@uiw/react-codemirror";
 import { aura } from "@uiw/codemirror-theme-aura";
-import { python } from "@codemirror/lang-python";
 import { json } from "@codemirror/lang-json";
 
 interface ContainerApiSimulatorTabProps {
@@ -120,7 +119,7 @@ export function ContainerApiSimulatorTab({
       setResponse(JSON.stringify(data[data.length - 1], null, 2));
       form.setValue("payload", data[data.length - 1]?.config?.data);
     }
-  }, []);
+  }, [data, form]);
 
   function onSubmit(values: PostRequestRawJSONSchema) {
     mutatePOST(JSON.parse(values.payload));

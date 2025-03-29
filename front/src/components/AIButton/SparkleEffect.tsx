@@ -17,16 +17,6 @@ export function SparkleEffect() {
   const [sparkles, setSparkles] = useState<Sparkle[]>([]);
   const [isMounted, setIsMounted] = useState(false);
 
-  useEffect(() => {
-    setIsMounted(true); // Prevents hydration error by delaying sparkle creation until after mount
-
-    const interval = setInterval(() => {
-      if (isMounted) createSparkle();
-    }, 300);
-
-    return () => clearInterval(interval);
-  }, [isMounted]);
-
   const createSparkle = () => {
     if (sparkles.length >= 20) return; // Limits the number of sparkles for performance
 
@@ -47,6 +37,16 @@ export function SparkleEffect() {
       setSparkles((prev) => prev.filter((s) => s.id !== sparkle.id));
     }, 1500);
   };
+
+  useEffect(() => {
+    setIsMounted(true); // Prevents hydration error by delaying sparkle creation until after mount
+
+    const interval = setInterval(() => {
+      if (isMounted) createSparkle();
+    }, 300);
+
+    return () => clearInterval(interval);
+  }, [isMounted, createSparkle]);
 
   if (!isMounted) return null; // Ensures the component doesn't render before mounting
 
@@ -77,7 +77,13 @@ export function SparkleEffect() {
               fill="url(#sparkleGradient)"
             />
             <defs>
-              <radialGradient id="sparkleGradient" cx="0.5" cy="0.5" r="0.5" gradientUnits="objectBoundingBox">
+              <radialGradient
+                id="sparkleGradient"
+                cx="0.5"
+                cy="0.5"
+                r="0.5"
+                gradientUnits="objectBoundingBox"
+              >
                 <stop offset="0%" stopColor="#FFFF00" />
                 <stop offset="100%" stopColor="#FFA500" />
               </radialGradient>

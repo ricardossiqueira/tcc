@@ -19,6 +19,7 @@ import {
   FormMessage,
 } from "../ui/form";
 import { GitHubLogoIcon } from "@radix-ui/react-icons";
+import Image from "next/image";
 
 export function RegisterForm({
   className,
@@ -152,7 +153,7 @@ export function RegisterForm({
             </form>
           </Form>
           <div className="relative hidden bg-muted md:block">
-            <img
+            <Image
               src="https://placehold.co/400x600?text=Image"
               alt="Image"
               className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"

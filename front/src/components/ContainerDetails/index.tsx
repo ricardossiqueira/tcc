@@ -1,13 +1,10 @@
 "use client";
-import { ArrowLeft, Play, RefreshCw, Square, Trash2 } from "lucide-react";
+import { ArrowLeft, Play, RefreshCw, Square } from "lucide-react";
 import Link from "next/link";
 import { useQueryClient, useQuery, useMutation } from "@tanstack/react-query";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { api } from "../../api/axios";
-import {
-  useDeleteContainerMutation,
-  useGetContainerDetailsQuery,
-} from "../../api/containers";
+import { useGetContainerDetailsQuery } from "../../api/containers";
 import { ContainerStatusBadge } from "../ContainerStatusBadge";
 import Loading from "../Loading";
 import { Button } from "../ui/button";

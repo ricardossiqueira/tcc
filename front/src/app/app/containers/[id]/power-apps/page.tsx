@@ -1,20 +1,19 @@
-"use client"
+"use client";
 
-import React from "react"
-import { useEffect, useRef, useState } from "react"
-import Image from "next/image"
-import { ChevronDown, Check, Copy, ExternalLink } from "lucide-react"
-import { Button } from "../../../../../components/ui/button"
-import { Card } from "../../../../../components/ui/card"
-import { cn } from "../../../../../lib/utils"
-import { GradientSpan } from "../../../../../components/GradientSpan"
-import SyntaxHighlighter from "react-syntax-highlighter"
-import { dracula } from "react-syntax-highlighter/dist/esm/styles/hljs"
+import React from "react";
+import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
+import { ChevronDown, Check, Copy, ExternalLink } from "lucide-react";
+import { Button } from "../../../../../components/ui/button";
+import { Card } from "../../../../../components/ui/card";
+import { cn } from "../../../../../lib/utils";
+import { GradientSpan } from "../../../../../components/GradientSpan";
+import SyntaxHighlighter from "react-syntax-highlighter";
+import { dracula } from "react-syntax-highlighter/dist/esm/styles/hljs";
 
 export default function ApiIntegrationGuide() {
-  const [activeStep, setActiveStep] = useState(0)
-  const [isDarkMode, setIsDarkMode] = useState(false)
-  const stepsRef = useRef<(HTMLElement | null)[]>([])
+  const [activeStep, setActiveStep] = useState(0);
+  const stepsRef = useRef<(HTMLElement | null)[]>([]);
 
   // Steps data
   const steps = [
@@ -28,7 +27,8 @@ export default function ApiIntegrationGuide() {
     {
       id: "authentication",
       title: "Authentication Setup",
-      description: "Before you can make API calls, you'll need to set up authentication using API keys.",
+      description:
+        "Before you can make API calls, you'll need to set up authentication using API keys.",
       image: "https://placehold.co/400x400?text=Image",
       code: `
 // Request your API key from the dashboard
@@ -56,7 +56,8 @@ const headers = {
     {
       id: "integration",
       title: "Integrating with Your Service",
-      description: "Now let's connect your service to our API using a simple client implementation.",
+      description:
+        "Now let's connect your service to our API using a simple client implementation.",
       image: "https://placehold.co/400x400?text=Image",
       code: `
 // Example API client implementation
@@ -97,19 +98,20 @@ console.log(users);`,
     {
       id: "webhooks",
       title: "Setting Up Webhooks",
-      description: "Webhooks allow our service to notify your application when events happen in real-time.",
+      description:
+        "Webhooks allow our service to notify your application when events happen in real-time.",
       image: "https://placehold.co/400x400?text=Image",
       code: `
 // Example webhook handler (Express.js)
 app.post('/webhooks', express.json(), (req, res) => {
   const event = req.body;
-  
+
   // Verify webhook signature
   const signature = req.headers['x-webhook-signature'];
   if (!verifySignature(event, signature, webhookSecret)) {
     return res.status(401).send('Invalid signature');
   }
-  
+
   // Handle different event types
   switch (event.type) {
     case 'transaction.created':
@@ -120,7 +122,7 @@ app.post('/webhooks', express.json(), (req, res) => {
       break;
     // Handle other event types
   }
-  
+
   res.status(200).send('Webhook received');
 });`,
     },
@@ -140,7 +142,8 @@ app.post('/webhooks', express.json(), (req, res) => {
     {
       id: "going-live",
       title: "Going Live",
-      description: "Once you've tested your integration and everything works as expected, you're ready to go live!",
+      description:
+        "Once you've tested your integration and everything works as expected, you're ready to go live!",
       image: "https://placehold.co/400x400?text=Image",
       list: [
         "Switch to production API keys (prefix: live_)",
@@ -149,23 +152,17 @@ app.post('/webhooks', express.json(), (req, res) => {
         "Set up alerts for any critical errors or issues",
       ],
     },
-  ]
-
-  // Toggle dark mode
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode)
-    document.documentElement.classList.toggle("dark")
-  }
+  ];
 
   // Copy code to clipboard
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
-  }
+    navigator.clipboard.writeText(text);
+  };
 
   // Scroll to a specific step
   const scrollToStep = (index: number) => {
-    stepsRef.current[index]?.scrollIntoView({ behavior: "smooth" })
-  }
+    stepsRef.current[index]?.scrollIntoView({ behavior: "smooth" });
+  };
 
   // Set up intersection observer to track active step
   useEffect(() => {
@@ -173,34 +170,28 @@ app.post('/webhooks', express.json(), (req, res) => {
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            const index = stepsRef.current.findIndex((ref) => ref === entry.target)
+            const index = stepsRef.current.findIndex(
+              (ref) => ref === entry.target,
+            );
             if (index !== -1) {
-              setActiveStep(index)
+              setActiveStep(index);
             }
           }
-        })
+        });
       },
       { threshold: 0.5 },
-    )
+    );
 
     stepsRef.current.forEach((ref) => {
-      if (ref) observer.observe(ref)
-    })
+      if (ref) observer.observe(ref);
+    });
 
     return () => {
       stepsRef.current.forEach((ref) => {
-        if (ref) observer.unobserve(ref)
-      })
-    }
-  }, [])
-
-  // Check for preferred color scheme
-  useEffect(() => {
-    if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
-      setIsDarkMode(true)
-      document.documentElement.classList.add("dark")
-    }
-  }, [])
+        if (ref) observer.unobserve(ref);
+      });
+    };
+  }, []);
 
   return (
     <div className="min-h-screen">
@@ -229,7 +220,11 @@ app.post('/webhooks', express.json(), (req, res) => {
                         : "border-2 border-gray-300 text-gray-500 dark:border-gray-700",
                   )}
                 >
-                  {activeStep > index ? <Check className="h-3 w-3" /> : index + 1}
+                  {activeStep > index ? (
+                    <Check className="h-3 w-3" />
+                  ) : (
+                    index + 1
+                  )}
                 </div>
                 <span className="truncate">{step.title}</span>
               </div>
@@ -243,14 +238,12 @@ app.post('/webhooks', express.json(), (req, res) => {
         {/* Introduction section */}
         <section className="text-center mb-12">
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-            <GradientSpan>
-              Power Apps {" "}
-            </GradientSpan>
+            <GradientSpan>Power Apps </GradientSpan>
             integration
           </h2>
           <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Follow this guide to integrate your service with our powerful API platform. Scroll down to explore each step
-            of the process.
+            Follow this guide to integrate your service with our powerful API
+            platform. Scroll down to explore each step of the process.
           </p>
           <div className="mt-8 animate-bounce">
             <ChevronDown className="h-8 w-8 text-purple-600 dark:text-purple-500 mx-auto" />
@@ -260,7 +253,14 @@ app.post('/webhooks', express.json(), (req, res) => {
         {/* Steps */}
         <div className="space-y-24 pb-24">
           {steps.map((step, index) => (
-            <section key={step.id} ref={(el) => { stepsRef.current[index] = el; }} className="scroll-mt-20" id={step.id}>
+            <section
+              key={step.id}
+              ref={(el) => {
+                stepsRef.current[index] = el;
+              }}
+              className="scroll-mt-20"
+              id={step.id}
+            >
               <div className="flex items-center mb-4">
                 <div
                   className={cn(
@@ -270,12 +270,16 @@ app.post('/webhooks', express.json(), (req, res) => {
                 >
                   {index + 1}
                 </div>
-                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">{step.title}</h2>
+                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+                  {step.title}
+                </h2>
               </div>
 
               <div className="grid md:grid-cols-2 gap-8 items-center">
                 <div>
-                  <p className="text-lg text-gray-700 dark:text-gray-300 mb-6">{step.description}</p>
+                  <p className="text-lg text-gray-700 dark:text-gray-300 mb-6">
+                    {step.description}
+                  </p>
 
                   {step.list && (
                     <ul className="space-y-2 mb-6">
@@ -284,7 +288,9 @@ app.post('/webhooks', express.json(), (req, res) => {
                           <div className="h-6 w-6 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center mr-2 mt-0.5">
                             <Check className="h-3 w-3 text-purple-600 dark:text-purple-400" />
                           </div>
-                          <span className="text-gray-700 dark:text-gray-300">{item}</span>
+                          <span className="text-gray-700 dark:text-gray-300">
+                            {item}
+                          </span>
                         </li>
                       ))}
                     </ul>
@@ -301,7 +307,13 @@ app.post('/webhooks', express.json(), (req, res) => {
                       >
                         <Copy className="h-4 w-4" />
                       </Button>
-                      <SyntaxHighlighter language="javascript" style={dracula} className="whitespace-pre-wrap overflow-x-auto rounded-md" >{step.code}</SyntaxHighlighter>
+                      <SyntaxHighlighter
+                        language="javascript"
+                        style={dracula}
+                        className="whitespace-pre-wrap overflow-x-auto rounded-md"
+                      >
+                        {step.code}
+                      </SyntaxHighlighter>
                     </Card>
                   )}
                 </div>
@@ -328,10 +340,12 @@ app.post('/webhooks', express.json(), (req, res) => {
 
         {/* Final CTA */}
         <section className="text-center bg-purple-50 dark:bg-purple-900/20 rounded-xl p-8 mt-12">
-          <h2 className="text-2xl font-bold text-purple-700 dark:text-purple-400 mb-4">Ready to Get Started?</h2>
+          <h2 className="text-2xl font-bold text-purple-700 dark:text-purple-400 mb-4">
+            Ready to Get Started?
+          </h2>
           <p className="text-gray-700 dark:text-gray-300 mb-6 max-w-xl mx-auto">
-            Now that you understand how to integrate with our API, it's time to create your account and start building
-            your integration.
+            Now that you understand how to integrate with our API, it&apos;s
+            time to create your account and start building your integration.
           </p>
           <Button className="bg-purple-600 hover:bg-purple-700 dark:bg-purple-700 dark:hover:bg-purple-600">
             Create Developer Account
@@ -353,7 +367,9 @@ app.post('/webhooks', express.json(), (req, res) => {
                 onClick={() => scrollToStep(index)}
                 className={cn(
                   "w-2 h-2 rounded-full transition-colors",
-                  index === activeStep ? "bg-purple-600 dark:bg-purple-500" : "bg-gray-300 dark:bg-gray-700",
+                  index === activeStep
+                    ? "bg-purple-600 dark:bg-purple-500"
+                    : "bg-gray-300 dark:bg-gray-700",
                 )}
                 aria-label={`Go to step ${index + 1}`}
               />
@@ -362,6 +378,5 @@ app.post('/webhooks', express.json(), (req, res) => {
         </div>
       </div>
     </div>
-  )
+  );
 }
-

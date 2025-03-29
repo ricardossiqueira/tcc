@@ -38,10 +38,10 @@ const useSSE = (url: string): Event | undefined => {
           const data = JSON.parse(event.data);
           setLastEvent(data);
           setRetryCount(0);
-        } catch (error) {}
+        } catch {}
       };
 
-      eventSource.onerror = (error) => {
+      eventSource.onerror = () => {
         eventSource?.close();
         if (retryCount < MAX_RETRIES) {
           const retryDelay = INITIAL_RETRY_DELAY * 2 ** retryCount; // Exponencial backoff

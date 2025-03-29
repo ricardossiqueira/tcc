@@ -19,18 +19,16 @@ interface DeleteDialogProps {
   pushHome?: boolean;
 }
 
-function DeleteDialog({
-  containerId,
-  isLoading,
-  pushHome = false,
-}: DeleteDialogProps) {
+function DeleteDialog({ containerId, pushHome = false }: DeleteDialogProps) {
   const { push } = useRouter();
 
   const { mutate: deleteContainerMutate, isPending: isDeletePending } =
     useDeleteContainerMutation({
       containerId,
       onSuccess: () => {
-        pushHome && push("/app/containers");
+        if (pushHome) {
+          push("/app/containers");
+        }
       },
     });
 

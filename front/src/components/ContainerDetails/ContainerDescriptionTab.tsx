@@ -24,7 +24,8 @@ function ContainerDescriptionTab({
       <CardHeader>
         <CardTitle>Service Description</CardTitle>
         <span className="text-sm text-muted-foreground">
-          This is an AI description generated based on the container's service.
+          This is an AI description generated based on the container&apos;s
+          service.
         </span>
       </CardHeader>
       <CardContent>

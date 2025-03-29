@@ -1,28 +1,21 @@
-"use client"
+"use client";
 
-import {
-  Settings,
-  HelpCircle,
-  Menu,
-  Container,
-  Rocket,
-  Boxes,
-} from "lucide-react"
+import { Settings, HelpCircle, Menu, Boxes } from "lucide-react";
 
-import { Home } from "lucide-react"
-import Link from "next/link"
-import { useState } from "react"
-import Image from "next/image"
-import useUser from "../../hooks/useUser"
-import { usePathname } from "next/navigation"
+import { Home } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
+import Image from "next/image";
+import useUser from "../../hooks/useUser";
+import { usePathname } from "next/navigation";
 
 export function AppSidebar() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user } = useUser();
   const path = usePathname();
 
   function handleNavigation() {
-    setIsMobileMenuOpen(false)
+    setIsMobileMenuOpen(false);
   }
 
   const pathIncludes = (urlList: string[]) => {
@@ -36,9 +29,9 @@ export function AppSidebar() {
     icon: Icon,
     children,
   }: {
-    href: string
-    icon: any
-    children: React.ReactNode
+    href: string;
+    icon: React.ElementType;
+    children: React.ReactNode;
   }) {
     return (
       <Link
@@ -49,7 +42,7 @@ export function AppSidebar() {
         <Icon className="h-4 w-4 mr-3 flex-shrink-0" />
         {children}
       </Link>
-    )
+    );
   }
 
   return (
@@ -134,7 +127,5 @@ export function AppSidebar() {
         />
       )}
     </>
-  )
+  );
 }
-
-

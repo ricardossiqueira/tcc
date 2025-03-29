@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { Rocket } from "lucide-react";
 import { Button } from "../ui/button";
-import { Card, CardContent, CardFooter, CardHeader } from "../ui/card";
+import { Card, CardContent, CardHeader } from "../ui/card";
 import { Textarea } from "../ui/textarea";
 import ReactCodeMirror from "@uiw/react-codemirror";
 import { python } from "@codemirror/lang-python";
@@ -14,7 +14,11 @@ import { useToast } from "../../hooks/useToast";
 import { ILlmResponse } from "../../interfaces/llm";
 import { aura } from "@uiw/codemirror-theme-aura";
 
-const TipCard = ({ children }) => (
+interface TipCardProps {
+  children: React.ReactNode;
+}
+
+const TipCard = ({ children }: TipCardProps) => (
   <div className="p-3 bg-gray-500/10 rounded-lg">{children}</div>
 );
 
@@ -41,9 +45,9 @@ const TipsList = () => (
         <TipCard>
           <TipTitle emoji="🤔">Effective Prompts</TipTitle>
           <p className="text-sm text-gray-300">
-            Be specific about what you want. For example, instead of "Create a
-            calculator", try "Create a service that returns the sum of two
-            numbers".
+            Be specific about what you want. For example, instead of
+            &quot;Create a calculator&quot;, try &quot;Create a service that
+            returns the sum of two numbers&quot;.
           </p>
         </TipCard>
 
@@ -71,7 +75,9 @@ const TipsList = () => (
             <li>
               The editor supports syntax highlighting for better readability
             </li>
-            <li>Click "Deploy Code" to send your code to a container</li>
+            <li>
+              Click &quot;Deploy Code&quot; to send your code to a container
+            </li>
           </ul>
         </TipCard>
       </div>
@@ -134,12 +140,15 @@ export function AppContent() {
       choices: [
         {
           message: {
-            content: value.toString(),
-            role: response?.choices[0].message.role,
+            content: value ? value.toString() : "",
+            role: response?.choices?.[0]?.message.role,
           },
           finish_reason: "",
           index: 0,
-          logprobs: undefined,
+          logprobs: {
+            content: "",
+            refusal: "",
+          },
         },
       ],
     });

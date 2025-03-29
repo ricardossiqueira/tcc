@@ -2,14 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import {
-  ArrowUpDown,
-  MoreHorizontal,
-  Play,
-  RefreshCw,
-  Square,
-  Trash2,
-} from "lucide-react";
+import { ArrowUpDown, Play, Square } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toDate } from "date-fns";
 import { IContainer, useGetUserContainersQuery } from "../../api/containers";
@@ -24,14 +17,6 @@ import {
   TableCell,
   Table,
 } from "../ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
 import { api } from "../../api/axios";
 import { GradientSpan } from "../GradientSpan";
 
@@ -135,7 +120,7 @@ export default function ContainerList() {
       <div className="flex items-center justify-center text-xl h-[70vh] flex-col">
         <div>In the beginning, there was nothing...</div>{" "}
         <div>
-          Let's get started by creating your
+          Let&apos;s get started by creating your
           <Link href="/app">
             <GradientSpan className="font-bold ml-2">
               first container

@@ -42,18 +42,20 @@ export function useZodForm<TSchema extends z.ZodType>(
 }
 
 // JSON free input field
-export const postRequestRawJSONSchema = z.object({
-  payload: z.string(),
-}).superRefine(({ payload }, ctx) => {
-  try {
-    JSON.parse(payload as string)
-  } catch (error) {
-    ctx.addIssue({
-      code: "custom",
-      message: "Payload must be a valid JSON",
-      path: ["payload"],
-    })
-  }
-})
+export const postRequestRawJSONSchema = z
+  .object({
+    payload: z.string(),
+  })
+  .superRefine(({ payload }, ctx) => {
+    try {
+      JSON.parse(payload as string);
+    } catch {
+      ctx.addIssue({
+        code: "custom",
+        message: "Payload must be a valid JSON",
+        path: ["payload"],
+      });
+    }
+  });
 
-export type PostRequestRawJSONSchema = z.infer<typeof postRequestRawJSONSchema>
+export type PostRequestRawJSONSchema = z.infer<typeof postRequestRawJSONSchema>;

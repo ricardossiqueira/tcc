@@ -22,7 +22,7 @@ export interface ILogprobs {
 }
 
 export interface IMessage {
-  role: string;
+  role: string | undefined;
   content: string;
 }
 
