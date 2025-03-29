@@ -18,13 +18,11 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/namesgenerator"
 	"github.com/google/uuid"
-	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/forms"
-	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/tools/security"
 	"github.com/spf13/cast"
 )
@@ -58,7 +56,6 @@ func (cn Container) GetContainerById(containerId string) (types.ContainerDetails
 
 	err := cn.
 		app.
-		Dao().
 		DB().
 		NewQuery(
 			fmt.Sprintf(
@@ -74,14 +71,14 @@ func (cn Container) GetContainerById(containerId string) (types.ContainerDetails
 
 // * Create container stats
 func (cn Container) CreateStats(payload types.CreateContainerStatsDTO) error {
-	collection, err := cn.app.Dao().FindCollectionByNameOrId("container_stats")
+	collection, err := cn.app.FindCollectionByNameOrId("container_stats")
 	if err != nil {
 		return err
 	}
 
-	record := models.NewRecord(collection)
+	record := core.NewRecord(collection)
 	form := forms.NewRecordUpsert(cn.app, record)
-	form.LoadData(map[string]any{
+	form.Load(map[string]any{
 		"container":      payload.Container,
 		"start_duration": payload.StartDuration,
 		"stop_duration":  payload.StopDuration,
@@ -109,23 +106,23 @@ func (cn Container) HandleStatusChan() {
 }
 
 // * List all containers
-func (cn Container) List(c echo.Context) error {
+func (cn Container) List(re *core.RequestEvent) error {
 	containers := []types.ContainerListDTO{}
+	info, _ := re.RequestInfo()
+	user := info.Auth
 
-	user := c.Get(apis.ContextAuthRecordKey).(*models.Record)
-
-	cn.app.Dao().DB().
+	cn.app.DB().
 		Select("*").
 		From("containers").
 		Where(dbx.NewExp("owner = {:id}", dbx.Params{"id": user.Id})).
 		All(&containers)
 
-	return c.JSON(http.StatusOK, containers)
+	return re.JSON(http.StatusOK, containers)
 }
 
 // * List containers by status
-func (cn Container) ListByStatus(c echo.Context) error {
-	status := c.PathParam("status")
+func (cn Container) ListByStatus(re *core.RequestEvent) error {
+	status := re.Request.PathValue("status")
 	var containers_list []types.ContainerStatusDTO
 
 	containers, err := cn.DockerCli.ContainerList(cn.DockerCtx, dockerTypes.ListOptions{All: true})
@@ -139,14 +136,15 @@ func (cn Container) ListByStatus(c echo.Context) error {
 			containers_list = append(containers_list, types.ContainerStatusDTO{DockerId: ctr.ID, ImageName: ctr.Image, Status: ctrStatus})
 		}
 	}
-	return c.JSON(http.StatusOK, containers_list)
+	return re.JSON(http.StatusOK, containers_list)
 }
 
 // * Stop a container
-func (cn Container) StopContainer(c echo.Context) error {
-	containerId := c.PathParam("id")
+func (cn Container) StopContainer(re *core.RequestEvent) error {
+	containerId := re.Request.PathValue("id")
 	started_at := time.Now().UnixMilli()
-	user := c.Get(apis.ContextAuthRecordKey).(*models.Record)
+	info, _ := re.RequestInfo()
+	user := info.Auth
 
 	container, err := cn.GetContainerById(containerId)
 	if err != nil {
@@ -164,7 +162,7 @@ func (cn Container) StopContainer(c echo.Context) error {
 
 	cn.portMap.ReleasePort(container.Port)
 
-	record, err := cn.app.Dao().FindRecordById("containers", containerId)
+	record, err := cn.app.FindRecordById("containers", containerId)
 	if err != nil {
 		cn.app.Logger().Error(fmt.Sprintf("[CONTAINER_STOP_CONTAINER] %s", err.Error()))
 		return apis.NewBadRequestError(err.Error(), nil)
@@ -173,7 +171,7 @@ func (cn Container) StopContainer(c echo.Context) error {
 	record.Set("status", "Stopped")
 	record.Set("port", nil)
 
-	if err := cn.app.Dao().SaveRecord(record); err != nil {
+	if err := cn.app.Save(record); err != nil {
 		cn.app.Logger().Error(fmt.Sprintf("[CONTAINER_STOP_CONTAINER] %s", err.Error()))
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
@@ -194,14 +192,15 @@ func (cn Container) StopContainer(c echo.Context) error {
 		ContainerID: containerId,
 	}
 
-	return c.JSON(http.StatusOK, nil)
+	return re.JSON(http.StatusOK, nil)
 }
 
 // * Start a container
-func (cn Container) StartContainer(c echo.Context) error {
-	containerId := c.PathParam("id")
+func (cn Container) StartContainer(re *core.RequestEvent) error {
+	containerId := re.Request.PathValue("id")
 	started_at := time.Now().UnixMilli()
-	user := c.Get(apis.ContextAuthRecordKey).(*models.Record)
+	info, _ := re.RequestInfo()
+	user := info.Auth
 
 	container, err := cn.GetContainerById(containerId)
 	if err != nil {
@@ -210,7 +209,7 @@ func (cn Container) StartContainer(c echo.Context) error {
 	}
 
 	script := types.ScriptDTO{}
-	err = cn.app.Dao().DB().Select("*").
+	err = cn.app.DB().Select("*").
 		From("scripts").
 		Where(dbx.NewExp("id = {:id}", dbx.Params{"id": container.ScriptId})).
 		One(&script)
@@ -238,7 +237,7 @@ func (cn Container) StartContainer(c echo.Context) error {
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
-	record, err := cn.app.Dao().FindRecordById("containers", containerId)
+	record, err := cn.app.FindRecordById("containers", containerId)
 	if err != nil {
 		cn.app.Logger().Error(fmt.Sprintf("[CONTAINER_START_CONTAINER]: %s", err.Error()))
 		return apis.NewBadRequestError(err.Error(), nil)
@@ -246,7 +245,7 @@ func (cn Container) StartContainer(c echo.Context) error {
 
 	form := forms.NewRecordUpsert(cn.app, record)
 
-	form.LoadData(map[string]any{
+	form.Load(map[string]any{
 		"docker_id": resp.ID,
 		"status":    "Up",
 		"port":      port,
@@ -278,56 +277,55 @@ func (cn Container) StartContainer(c echo.Context) error {
 		ContainerID: containerId,
 	}
 
-	return c.JSON(http.StatusOK, nil)
+	return re.JSON(http.StatusOK, nil)
 }
 
-func (cn Container) ContainerPOST(c echo.Context) error {
-	data := apis.RequestInfo(c).Data
-	containerId := c.PathParam("id")
-
+func (cn Container) ContainerPOST(re *core.RequestEvent) error {
+	info, _ := re.RequestInfo()
+	containerId := re.Request.PathValue("id")
 	container, err := cn.GetContainerById(containerId)
 	if err != nil {
 		cn.app.App.Logger().Error(fmt.Sprintf("[CONTAINER_CONTAINER_POST]: %v", err))
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
-	status, value := ProxyPOST(fmt.Sprintf("http://localhost:%s", container.Port), data)
-	return c.JSON(status, value)
+	status, value := ProxyPOST(fmt.Sprintf("http://localhost:%s", container.Port), info.Body)
+	return re.JSON(status, value)
 }
 
-func (cn Container) ContainerGET(c echo.Context) error {
-	containerId := c.PathParam("id")
-
+func (cn Container) ContainerGET(re *core.RequestEvent) error {
+	containerId := re.Request.PathValue("id")
 	container, err := cn.GetContainerById(containerId)
 	if err != nil {
 		cn.app.App.Logger().Error(fmt.Sprintf("[CONTAINER_CONTAINER_GET]: %v", err))
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
 	status, value := ProxyGET(fmt.Sprintf("http://localhost:%s", container.Port))
-	return c.JSON(status, value)
+	return re.JSON(status, value)
 }
 
-func (cn Container) Create(c echo.Context) error {
-	user, _ := c.Get(apis.ContextAuthRecordKey).(*models.Record)
+func (cn Container) Create(re *core.RequestEvent) error {
+	info, _ := re.RequestInfo()
+	user := info.Auth
 
 	data := types.ScriptCreateDTO{}
-	if err := c.Bind(&data); err != nil {
+	if err := re.BindBody(&data); err != nil {
 		cn.app.App.Logger().Error(fmt.Sprintf("[CONTAINER_CREATE]: %v", err))
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
 	script := data.Payload.Choices[0].Message.Content
 
 	//CREATE script
-	collection, err := cn.app.Dao().FindCollectionByNameOrId("scripts")
+	collection, err := cn.app.FindCollectionByNameOrId("scripts")
 	if err != nil {
 		cn.app.App.Logger().Error(fmt.Sprintf("[CONTAINER_CREATE]: %v", err))
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
-	record := models.NewRecord(collection)
+	record := core.NewRecord(collection)
 	form := forms.NewRecordUpsert(cn.app, record)
 
-	form.LoadData(map[string]any{
+	form.Load(map[string]any{
 		"script":  script,
 		"payload": data.Payload,
 		"owner":   user.Id,
@@ -342,17 +340,18 @@ func (cn Container) Create(c echo.Context) error {
 	return nil
 }
 
-func (cn Container) Delete(c echo.Context) error {
-	containerId := c.PathParam("id")
-	user := c.Get(apis.ContextAuthRecordKey).(*models.Record)
+func (cn Container) Delete(re *core.RequestEvent) error {
+	containerId := re.Request.PathValue("id")
+	info, _ := re.RequestInfo()
+	user := info.Auth
 
-	containerRecord, err := cn.app.Dao().FindRecordById("containers", containerId)
+	containerRecord, err := cn.app.FindRecordById("containers", containerId)
 	if err != nil {
 		cn.app.App.Logger().Error(fmt.Sprintf("[CONTAINER_DELETE]: %v", err))
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
-	scriptRecord, err := cn.app.Dao().FindRecordById("scripts", containerRecord.GetString("script"))
+	scriptRecord, err := cn.app.FindRecordById("scripts", containerRecord.GetString("script"))
 	if err != nil {
 		cn.app.App.Logger().Error(fmt.Sprintf("[CONTAINER_DELETE]: %v", err))
 		return apis.NewBadRequestError(err.Error(), nil)
@@ -374,12 +373,12 @@ func (cn Container) Delete(c echo.Context) error {
 		}
 	}
 
-	if err := cn.app.Dao().DeleteRecord(containerRecord); err != nil {
+	if err := cn.app.Delete(containerRecord); err != nil {
 		cn.app.App.Logger().Error(fmt.Sprintf("[CONTAINER_DELETE]: %v", err))
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
-	if err := cn.app.Dao().DeleteRecord(scriptRecord); err != nil {
+	if err := cn.app.Delete(scriptRecord); err != nil {
 		cn.app.App.Logger().Error(fmt.Sprintf("[CONTAINER_DELETE]: %v", err))
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
@@ -398,36 +397,35 @@ func (cn Container) Delete(c echo.Context) error {
 		ContainerID: containerId,
 	}
 
-	return c.JSON(http.StatusOK, nil)
+	return re.JSON(http.StatusOK, nil)
 }
 
-func (cn Container) Details(c echo.Context) error {
-	containerId := c.PathParam("id")
-
+func (cn Container) Details(re *core.RequestEvent) error {
+	containerId := re.Request.PathValue("id")
 	container, err := cn.GetContainerById(containerId)
 	if err != nil {
 		cn.app.App.Logger().Error(fmt.Sprintf("[CONTAINER_DETAILS]: %v", err))
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
-	return c.JSON(http.StatusOK, container)
+	return re.JSON(http.StatusOK, container)
 }
 
-func (cn Container) Notifications(c echo.Context) error {
-	w := c.Response()
-	userId := c.PathParam("userId")
-	userToken := c.QueryParam("token")
+func (cn Container) Notifications(re *core.RequestEvent) error {
+	info, _ := re.RequestInfo()
+	userId := re.Request.PathValue("userId")
+	userToken := info.Query["token"]
 
 	claims, _ := security.ParseUnverifiedJWT(userToken)
 	jwtUserId := cast.ToString(claims["id"])
 
-	w.Header().Set("Content-Type", "text/event-stream")
-	w.Header().Set("Cache-Control", "no-cache")
-	w.Header().Set("Connection", "keep-alive")
+	re.Response.Header().Set("Content-Type", "text/event-stream")
+	re.Response.Header().Set("Cache-Control", "no-cache")
+	re.Response.Header().Set("Connection", "keep-alive")
 
 	for {
 		select {
-		case <-c.Request().Context().Done():
+		case <-re.Request.Context().Done():
 			return nil
 
 		case eventData := <-cn.notificationsChan:
@@ -447,17 +445,20 @@ func (cn Container) Notifications(c echo.Context) error {
 				Data: append(jsonData, '\n', '\n'), // Fixes the SSE format
 			}
 
-			if err := event.MarshalTo(w); err != nil {
+			if err := event.MarshalTo(re.Response); err != nil {
 				return err
 			}
 
-			w.Flush()
+			if f, ok := re.Response.(http.Flusher); ok {
+				f.Flush()
+			}
 		}
 	}
 }
 
-func (cn *Container) TestSSE(c echo.Context) error {
-	user := c.Get(apis.ContextAuthRecordKey).(*models.Record)
+func (cn *Container) TestSSE(re *core.RequestEvent) error {
+	info, _ := re.RequestInfo()
+	user := info.Auth
 	cn.notificationsChan <- sse.Notification{
 		ID:          uuid.New().String(),
 		Type:        "success",
@@ -467,7 +468,7 @@ func (cn *Container) TestSSE(c echo.Context) error {
 		UserID:      user.Id,
 		ContainerID: "",
 	}
-	return c.JSON(http.StatusOK, nil)
+	return re.JSON(http.StatusOK, nil)
 }
 
 func (cn Container) Deploy(e *core.ModelEvent) error {
@@ -475,10 +476,10 @@ func (cn Container) Deploy(e *core.ModelEvent) error {
 	started_at := time.Now().UnixMilli()
 
 	//GET script
-	cn.app.Dao().DB().
+	cn.app.DB().
 		Select("*").
 		From("scripts").
-		Where(dbx.NewExp("id = {:id}", dbx.Params{"id": e.Model.GetId()})).
+		Where(dbx.NewExp("id = {:id}", dbx.Params{"id": e.Model.PK()})).
 		One(&script)
 
 	//Parse script to .tar
@@ -511,18 +512,18 @@ func (cn Container) Deploy(e *core.ModelEvent) error {
 	}
 
 	//Create container
-	collection, err := cn.app.Dao().FindCollectionByNameOrId("containers")
+	collection, err := cn.app.FindCollectionByNameOrId("containers")
 	if err != nil {
 		cn.app.App.Logger().Error(fmt.Sprintf("[CONTAINER_DEPLOY]: %v", err))
 		return err
 	}
 
-	record := models.NewRecord(collection)
+	record := core.NewRecord(collection)
 	form := forms.NewRecordUpsert(cn.app, record)
 
 	containerName := namesgenerator.GetRandomName(0)
 
-	form.LoadData(map[string]any{
+	form.Load(map[string]any{
 		"docker_id":   resp.ID,
 		"status":      "Up",
 		"image":       docker.GetImage(),

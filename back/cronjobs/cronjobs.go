@@ -28,7 +28,8 @@ import (
 // the error message, and the affected container ID.
 //
 // Example log output:
-//   [2025-03-06 15:04:05] ContainerCleaner(): failed to remove container - abc123
+//
+//	[2025-03-06 15:04:05] ContainerCleaner(): failed to remove container - abc123
 func logContainerCleanerError(app *pocketbase.PocketBase, err error, containerId string) {
 	app.Logger().Log(
 		context.Background(),
@@ -63,9 +64,10 @@ func logContainerCleanerError(app *pocketbase.PocketBase, err error, containerId
 // If any of these steps fail, the function logs the error and stops execution.
 //
 // Example log output (in case of an error):
-//   [2025-03-06 15:04:05] ContainerCleaner(): failed to stop container - abc123
-//   [2025-03-06 15:04:06] ContainerCleaner(): failed to remove container - abc123
-//   [2025-03-06 15:04:07] ContainerCleaner(): failed to find record - abc123
+//
+//	[2025-03-06 15:04:05] ContainerCleaner(): failed to stop container - abc123
+//	[2025-03-06 15:04:06] ContainerCleaner(): failed to remove container - abc123
+//	[2025-03-06 15:04:07] ContainerCleaner(): failed to find record - abc123
 func cleanContainer(app *pocketbase.PocketBase, cn *services.Container, c types.ContainerDTO) {
 	if err := cn.DockerCli.ContainerStop(cn.DockerCtx, c.DockerId, dockerContainer.StopOptions{}); err != nil {
 		logContainerCleanerError(app, err, c.Id)
@@ -76,7 +78,7 @@ func cleanContainer(app *pocketbase.PocketBase, cn *services.Container, c types.
 		return
 	}
 
-	record, err := app.Dao().FindRecordById("containers", c.Id)
+	record, err := app.FindRecordById("containers", c.Id)
 	if err != nil {
 		logContainerCleanerError(app, err, c.Id)
 		return
@@ -85,7 +87,7 @@ func cleanContainer(app *pocketbase.PocketBase, cn *services.Container, c types.
 	record.Set("status", "Stopped")
 	record.Set("port", 0)
 
-	if err := app.Dao().SaveRecord(record); err != nil {
+	if err := app.Save(record); err != nil {
 		logContainerCleanerError(app, err, c.Id)
 		return
 	}
@@ -107,8 +109,9 @@ func cleanContainer(app *pocketbase.PocketBase, cn *services.Container, c types.
 //  3. Logs a message indicating whether any containers were stopped or if there was nothing to do.
 //
 // Example log output:
-//   [2025-03-06 15:04:00] ContainerCleaner(): Stopped - abc123, xyz789
-//   [2025-03-06 15:05:00] ContainerCleaner(): Nothing to do
+//
+//	[2025-03-06 15:04:00] ContainerCleaner(): Stopped - abc123, xyz789
+//	[2025-03-06 15:05:00] ContainerCleaner(): Nothing to do
 //
 // Notes:
 // - This function is meant to be used as a PocketBase event handler, typically on server startup.
@@ -120,7 +123,7 @@ func ContainerCleaner(app *pocketbase.PocketBase, cn *services.Container) func(e
 		scheduler.MustAdd("hello", "*/1 * * * *", func() {
 			containers := []types.ContainerDTO{}
 
-			app.Dao().DB().
+			app.DB().
 				Select("*").
 				From("containers").
 				Where(

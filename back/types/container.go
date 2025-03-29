@@ -11,12 +11,12 @@ type ScriptCreateDTO struct {
 }
 
 type ScriptDTO struct {
-	Id      string        `db:"id" json:"id"`
-	Script  string        `db:"script" json:"script"`
-	Payload types.JsonMap `db:"payload" json:"payload"`
-	Owner   string        `db:"owner" json:"owner"`
-	Created string        `db:"created" json:"created"`
-	Update  string        `db:"updated" json:"updated"`
+	Id      string             `db:"id" json:"id"`
+	Script  string             `db:"script" json:"script"`
+	Payload types.JSONMap[any] `db:"payload" json:"payload"`
+	Owner   string             `db:"owner" json:"owner"`
+	Created string             `db:"created" json:"created"`
+	Update  string             `db:"updated" json:"updated"`
 }
 
 type ContainerDetailsDTO struct {

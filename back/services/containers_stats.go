@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/pocketbase/apis"
+	"github.com/pocketbase/pocketbase/core"
 )
 
 func (cn Container) GetContainerStatsById(containerId string) ([]types.ContainersStatsDTO, error) {
@@ -14,7 +14,6 @@ func (cn Container) GetContainerStatsById(containerId string) ([]types.Container
 
 	err := cn.
 		app.
-		Dao().
 		DB().
 		NewQuery(
 			fmt.Sprintf(
@@ -33,7 +32,6 @@ func (cn Container) GetContainerStatsComputedById(containerId string) (types.Con
 
 	err := cn.
 		app.
-		Dao().
 		DB().
 		NewQuery(
 			fmt.Sprintf(
@@ -47,24 +45,24 @@ func (cn Container) GetContainerStatsComputedById(containerId string) (types.Con
 	return container, nil
 }
 
-func (cn Container) Stats(c echo.Context) error {
-	containerId := c.PathParam("id")
+func (cn Container) Stats(re *core.RequestEvent) error {
+	containerId := re.Request.PathValue("id")
 
 	container, err := cn.GetContainerStatsById(containerId)
 	if err != nil {
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
-	return c.JSON(http.StatusOK, container)
+	return re.JSON(http.StatusOK, container)
 }
 
-func (cn Container) ComputedStats(c echo.Context) error {
-	containerId := c.PathParam("id")
+func (cn Container) ComputedStats(re *core.RequestEvent) error {
+	containerId := re.Request.PathValue("id")
 
 	container, err := cn.GetContainerStatsComputedById(containerId)
 	if err != nil {
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
-	return c.JSON(http.StatusOK, container)
+	return re.JSON(http.StatusOK, container)
 }
