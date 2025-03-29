@@ -22,7 +22,7 @@ export function AppSidebar() {
     return urlList.some((url) => path === url);
   };
 
-  if (pathIncludes(["/", "login"]) || !user) return <></>;
+  if (pathIncludes(["/", "login"]) || !user?.token) return <></>;
 
   function NavItem({
     href,

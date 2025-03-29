@@ -19,6 +19,7 @@ import {
   Form,
 } from "../ui/form";
 import { GitHubLogoIcon } from "@radix-ui/react-icons";
+import Image from "next/image";
 
 export function LoginForm({
   className,
@@ -30,7 +31,7 @@ export function LoginForm({
   const form = useForm<z.infer<typeof loginFormSchema>>({
     resolver: zodResolver(loginFormSchema),
     defaultValues: {
-      // prenting the form from being uncontrolled
+      // preventing the form from being uncontrolled
       identity: "",
       password: "",
     },
@@ -126,7 +127,9 @@ export function LoginForm({
           </Form>
 
           <div className="relative hidden bg-muted md:block">
-            <img
+            <Image
+              width={400}
+              height={600}
               src="https://placehold.co/400x600?text=Image"
               alt="Image"
               className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"

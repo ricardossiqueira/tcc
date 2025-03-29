@@ -25,7 +25,7 @@ export function AppHeader() {
     return urlList.some((url) => path === url);
   };
 
-  if (pathIncludes(["/login", "/register"]) || !user) return <></>;
+  if (pathIncludes(["/login", "/register"]) || !user?.token) return <></>;
 
   return (
     <nav className="px-3 sm:px-6 flex items-center justify-between bg-white dark:bg-[#0F0F12] border-b border-gray-200 dark:border-[#1F1F23] h-16">

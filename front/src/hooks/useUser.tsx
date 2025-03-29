@@ -126,27 +126,32 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     (data: z.infer<typeof registerFormSchema>) => {
       setIsLoading(true);
       api
-        .post<User | Error>(REGISTER_USER_ROUTE, data)
+        .post<Record | Error>(REGISTER_USER_ROUTE, data)
         .then((response) => {
-          const responseBody = response.data as User;
+          console.log("chamou", response);
+          const responseBody = response.data as Record;
           const cachedUserProperties = {
-            id: responseBody.record.id,
-            token: responseBody.token,
-            username: responseBody.record.username,
-            name: responseBody.record.name,
-            email: responseBody.record.email,
+            id: responseBody.id,
+            token: null,
+            username: responseBody.username,
+            name: responseBody.name,
+            email: responseBody.email,
             cacheTime: Date.now(),
           };
           setUser(cachedUserProperties);
           localStorage.setItem("user", JSON.stringify(cachedUserProperties));
-          router.push("/app");
           toast({
             title: "Account created successfully",
-            description: "Login with your new credentials.",
+            description: "Redirecting.",
             variant: "success",
           });
+          router.push("/app");
+        })
+        .then(() => {
+          fetchUser({ identity: data.email, password: data.password });
         })
         .catch((err) => {
+          console.log("erro", err);
           setError(err.response?.data as Error);
           toast({
             title: "Error creating account",
@@ -162,7 +167,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   );
 
   const redirect = useCallback(() => {
-    if (user) router.push("/app");
+    if (user?.token) router.push("/app");
   }, [router, user]);
 
   const logout = useCallback(() => {

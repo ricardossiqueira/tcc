@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { LoginForm } from "../../components/Forms/Login";
+import { RegisterForm } from "../../components/Forms/Register";
 import useUser from "../../hooks/useUser";
 import Loading from "../../components/Loading";
 import { useRouter } from "next/navigation";
@@ -12,7 +12,7 @@ export default function AuthPage() {
   const { push } = useRouter();
 
   const toggleForm = () => {
-    push("/register");
+    push("/login");
   };
 
   useEffect(() => {
@@ -28,7 +28,7 @@ export default function AuthPage() {
       <section>
         <div className="flex min-h-svh flex-col items-center justify-center p-6 md:p-10">
           <div className="w-full max-w-sm md:max-w-3xl">
-            <LoginForm onToggleForm={toggleForm} />
+            <RegisterForm onToggleForm={toggleForm} />
           </div>
         </div>
       </section>
