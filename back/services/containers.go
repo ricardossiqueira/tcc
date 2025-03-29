@@ -33,7 +33,7 @@ type Container struct {
 	DockerCli         *client.Client
 	notificationsChan chan sse.Notification
 	statusChan        chan types.CreateContainerStatsDTO
-	portMap           *PortMap
+	PortMap           *PortMap
 }
 
 func NewContainer(app *pocketbase.PocketBase, dockerCtx context.Context, dockerCli *client.Client, notificationsChan chan sse.Notification, statusChan chan types.CreateContainerStatsDTO) *Container {
@@ -43,7 +43,7 @@ func NewContainer(app *pocketbase.PocketBase, dockerCtx context.Context, dockerC
 		DockerCli:         dockerCli,
 		notificationsChan: notificationsChan,
 		statusChan:        statusChan,
-		portMap:           NewPortMap(),
+		PortMap:           NewPortMap(),
 	}
 
 	go cn.HandleStatusChan()
@@ -160,7 +160,7 @@ func (cn Container) StopContainer(re *core.RequestEvent) error {
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
-	cn.portMap.ReleasePort(container.Port)
+	cn.PortMap.ReleasePort(container.Port)
 
 	record, err := cn.app.FindRecordById("containers", containerId)
 	if err != nil {
@@ -225,7 +225,7 @@ func (cn Container) StartContainer(re *core.RequestEvent) error {
 		return apis.NewBadRequestError(err.Error(), nil)
 	}
 
-	port, err := cn.portMap.AllocatePort()
+	port, err := cn.PortMap.AllocatePort()
 	if err != nil {
 		cn.app.Logger().Error(fmt.Sprintf("[CONTAINER_START_CONTAINER]: %s", err.Error()))
 		return apis.NewBadRequestError(err.Error(), nil)
@@ -384,7 +384,7 @@ func (cn Container) Delete(re *core.RequestEvent) error {
 	}
 
 	if port != nil {
-		cn.portMap.ReleasePort(containerRecord.GetString("port"))
+		cn.PortMap.ReleasePort(containerRecord.GetString("port"))
 	}
 
 	cn.notificationsChan <- sse.Notification{
@@ -489,7 +489,7 @@ func (cn Container) Deploy(e *core.ModelEvent) error {
 		return err
 	}
 
-	port, err := cn.portMap.AllocatePort()
+	port, err := cn.PortMap.AllocatePort()
 	if err != nil {
 		cn.app.App.Logger().Error(fmt.Sprintf("[CONTAINER_DEPLOY]: %v", err))
 		return err

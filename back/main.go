@@ -1,6 +1,7 @@
 package main
 
 import (
+	"back/cronjobs"
 	"back/router"
 	"back/services"
 	"back/sse"
@@ -32,7 +33,7 @@ func main() {
 
 	cn := services.NewContainer(app, dockerCtx, dockerCli, notificationsChan, statusChan)
 
-	// app.Cron().MustAdd(cronjobs.ContainerCleaner(app, cn))
+	cronjobs.RegisterCleanContainers(app, cn)
 
 	app.OnServe().BindFunc(func(se *core.ServeEvent) error {
 		se.Router.GET("/{path...}", apis.Static(os.DirFS("./pb_public"), false))
