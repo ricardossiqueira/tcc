@@ -30,8 +30,7 @@ export default function ApiIntegrationGuide() {
       description:
         "Before you can make API calls, you'll need to set up authentication using API keys.",
       image: "https://placehold.co/400x400?text=Image",
-      code: `
-// Request your API key from the dashboard
+      code: `// Request your API key from the dashboard
 const apiKey = "your_api_key_here";
 
 // Include it in your request headers
@@ -59,8 +58,7 @@ const headers = {
       description:
         "Now let's connect your service to our API using a simple client implementation.",
       image: "https://placehold.co/400x400?text=Image",
-      code: `
-// Example API client implementation
+      code: `// Example API client implementation
 class ApiClient {
   constructor(apiKey) {
     this.apiKey = apiKey;
@@ -101,8 +99,7 @@ console.log(users);`,
       description:
         "Webhooks allow our service to notify your application when events happen in real-time.",
       image: "https://placehold.co/400x400?text=Image",
-      code: `
-// Example webhook handler (Express.js)
+      code: `// Example webhook handler (Express.js)
 app.post('/webhooks', express.json(), (req, res) => {
   const event = req.body;
 
