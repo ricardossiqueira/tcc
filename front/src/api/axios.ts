@@ -1,8 +1,7 @@
 import axios from "axios";
-import dayjs from "dayjs";
 
 const api = axios.create({
-  baseURL: "http://localhost:8090",
+  baseURL: process.env.API_URL || "http://localhost:8090",
   timeout: 10000 * 30,
 });
 

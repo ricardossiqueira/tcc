@@ -257,7 +257,7 @@ export function ContainerApiSimulatorTab({
               />
             </TabsContent>
             <TabsContent value="history">
-              <div className="space-y-4 h-80 overflow-auto">
+              <div className="space-y-4 h-full overflow-auto">
                 {history.length > 0 ? (
                   history.map((item, index) => (
                     <div
